@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const cors = require("cors");
 require("dotenv").config();//Because we need to load the environment variables before we try to use them.
 
 
@@ -10,6 +11,7 @@ const testRoutes = require("./routes/testRoutes");
 const userRoutes = require("./routes/userRoutes");
 const roomRoutes = require("./routes/roomRoutes");
 //middleware
+app.use(cors());
 app.use(express.json());//allows user to send or read data
 
 
