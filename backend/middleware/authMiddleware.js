@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
+const { AppError } = require("./errorMiddleware");
 
-const protect = (req, res, next) => {//Without next(), the request would stop inside the middleware.
+const protect = (req, res, next) => {
     let token = req.cookies && req.cookies.token;
 
     if (!token && req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
@@ -8,9 +9,8 @@ const protect = (req, res, next) => {//Without next(), the request would stop in
     }
 
     if (!token) {
-        return res.status(401).json({
-            message: "No token, access denied"
-        });
+        // Centralized: 401 in { error: { message, code } } shape.
+        return next(new AppError("No token, access denied", 401, "UNAUTHENTICATED"));
     }
 
     try {
@@ -24,9 +24,9 @@ const protect = (req, res, next) => {//Without next(), the request would stop in
         next();
 
     } catch (error) {
-        return res.status(401).json({
-            message: "Invalid or expired token"
-        });
+        // Both invalid-signature and expired-token errors fall through here.
+        // We do not want to leak which one occurred to the client.
+        return next(new AppError("Invalid or expired token", 401, "INVALID_TOKEN"));
     }
 };
 

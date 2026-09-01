@@ -42,11 +42,16 @@ function Signup() {
         if (response.ok) {
           navigate("/login");
         } else {
-          setError(data.message);
+          const message =
+            data?.error?.message ||
+            data?.message ||
+            "Signup failed. Please try again.";
+          setError(message);
         }
         console.log(data);
       } catch (error) {
         console.error("Signup error:", error);
+        setError("Network error. Please try again.");
       }
       finally {
         setLoading(false);

@@ -50,7 +50,11 @@ function Settings() {
         setNameSuccess("Name updated successfully!");
         setUser(data.user);
       } else {
-        setNameError(data.message || "Failed to update name");
+        const message =
+          data?.error?.message ||
+          data?.message ||
+          "Failed to update name";
+        setNameError(message);
       }
     } catch (err) {
       setNameError("Network error. Please try again.");
@@ -84,7 +88,11 @@ function Settings() {
         setNewPassword("");
         setConfirmPassword("");
       } else {
-        setPasswordError(data.message || "Failed to update password");
+        const message =
+          data?.error?.message ||
+          data?.message ||
+          "Failed to update password";
+        setPasswordError(message);
       }
     } catch (err) {
       setPasswordError("Network error. Please try again.");

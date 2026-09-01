@@ -35,13 +35,21 @@ function Login() {
         if (response.ok) {
           setUser(data.user);
           navigate("/dashboard");
-        }else {
-          setError(data.message);
+        } else {
+          // Backend may emit either shape:
+          //   new: { error: { message, code } }
+          //   legacy: { message }
+          const message =
+            data?.error?.message ||
+            data?.message ||
+            "Login failed. Please try again.";
+          setError(message);
         }
 
         console.log(data);
       } catch (error) {
         console.error("Login error:", error);
+        setError("Network error. Please try again.");
       }
 
       finally {

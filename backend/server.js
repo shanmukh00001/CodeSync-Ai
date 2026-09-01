@@ -11,6 +11,7 @@ const app = express();
 const testRoutes = require("./routes/testRoutes");
 const userRoutes = require("./routes/userRoutes");
 const roomRoutes = require("./routes/roomRoutes");
+const errorMiddleware = require("./middleware/errorMiddleware");
 //middleware
 
 app.use(express.json());//allows user to send or read data
@@ -43,8 +44,9 @@ app.use("/api/users", userRoutes);
 //app.use("/api/users", userRoutes);
 app.use("/api/rooms", roomRoutes);
 
-
-
+// Centralized error handler must be mounted LAST so it can catch errors
+// forwarded from any route above (Stage 1.2 DoD, Section 10).
+app.use(errorMiddleware);
 
 //start server
 app.listen(5000, () => {
