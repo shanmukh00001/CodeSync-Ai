@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const cookieParser= require("cookie-parser");
 require("dotenv").config();//Because we need to load the environment variables before we try to use them.
 
 
@@ -11,9 +12,15 @@ const testRoutes = require("./routes/testRoutes");
 const userRoutes = require("./routes/userRoutes");
 const roomRoutes = require("./routes/roomRoutes");
 //middleware
-app.use(cors());
-app.use(express.json());//allows user to send or read data
 
+app.use(express.json());//allows user to send or read data
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 
 //db-connection 
 mongoose

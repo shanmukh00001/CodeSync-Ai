@@ -1,15 +1,17 @@
 const jwt = require("jsonwebtoken");
 
 const protect = (req, res, next) => {//Without next(), the request would stop inside the middleware.
-    const authHeader = req.headers.authorization;
+    let token = req.cookies && req.cookies.token;
 
-    if (!authHeader) {
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+        token = req.headers.authorization.split(" ")[1];
+    }
+
+    if (!token) {
         return res.status(401).json({
             message: "No token, access denied"
         });
     }
-
-    const token = authHeader.split(" ")[1];
 
     try {
         const decoded = jwt.verify(

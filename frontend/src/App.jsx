@@ -6,8 +6,8 @@ import Dashboard from "./pages/Dashboard";
 import Room from "./pages/Room";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
-import ProtectedRoute from "./ProtectedRoute";
-import PublicRoute from "./PublicRoute";
+import ProtectedRoute from "./components/ProtectedRoute";
+import PublicRoute from "./components/PublicRoute";
 function App() {
   return (
     <BrowserRouter>

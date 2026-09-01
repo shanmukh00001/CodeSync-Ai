@@ -1,8 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 import "./Login.css"
 function Login() {
-
+    const { setUser } = useContext(AuthContext);
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -21,6 +22,7 @@ function Login() {
             headers: {
               "Content-Type": "application/json",
             },
+            credentials: "include",
             body: JSON.stringify({
               email,
               password,
@@ -31,7 +33,7 @@ function Login() {
         const data = await response.json();
 
         if (response.ok) {
-          localStorage.setItem("token", data.token);
+          setUser(data.user);
           navigate("/dashboard");
         }else {
           setError(data.message);

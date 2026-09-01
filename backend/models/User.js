@@ -17,7 +17,13 @@ const userSchema = new mongoose.Schema({
     activeRoom: {
     type: String,
     default: null
-}
+},
+    nameChanged: {
+        type: Boolean,
+        default: false
+    }
+}, {
+    timestamps: true
 });
 
 const User = mongoose.model("User", userSchema);

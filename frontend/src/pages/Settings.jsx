@@ -1,101 +1,208 @@
+import { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 import "./Settings.css";
 
 function Settings() {
   const navigate = useNavigate();
+  const { user, setUser } = useContext(AuthContext);
+
+  // Name Change State
+  const [newName, setNewName] = useState("");
+  const [nameLoading, setNameLoading] = useState(false);
+  const [nameError, setNameError] = useState("");
+  const [nameSuccess, setNameSuccess] = useState("");
+
+  // Password Change State
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
+
+  useEffect(() => {
+    if (user && user.name) {
+      setNewName(user.name);
+    }
+  }, [user]);
+
+  const handleNameChange = async (e) => {
+    e.preventDefault();
+    setNameError("");
+    setNameSuccess("");
+    
+    if (newName.trim() === "") {
+        return setNameError("Name cannot be empty");
+    }
+
+    setNameLoading(true);
+    try {
+      const response = await fetch("http://localhost:5000/api/users/name", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ newName }),
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        setNameSuccess("Name updated successfully!");
+        setUser(data.user);
+      } else {
+        setNameError(data.message || "Failed to update name");
+      }
+    } catch (err) {
+      setNameError("Network error. Please try again.");
+    } finally {
+      setNameLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setPasswordError("");
+    setPasswordSuccess("");
+
+    if (newPassword !== confirmPassword) {
+      return setPasswordError("New passwords do not match");
+    }
+
+    setPasswordLoading(true);
+    try {
+      const response = await fetch("http://localhost:5000/api/users/password", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        setPasswordSuccess("Password updated successfully!");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      } else {
+        setPasswordError(data.message || "Failed to update password");
+      }
+    } catch (err) {
+      setPasswordError("Network error. Please try again.");
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
 
   return (
     <div className="settings-page">
-
       <header className="settings-header">
-        <button
-          type="button"
-          onClick={() => navigate("/profile")}
-        >
+        <button type="button" onClick={() => navigate("/profile")}>
           ← Back to Profile
         </button>
-
         <h1>Settings</h1>
       </header>
 
       <main className="settings-content">
-
         {/* ACCOUNT SECTION */}
         <section className="settings-section">
           <h2>Account</h2>
-
           <div className="setting-item">
-            <div>
+            <div style={{ width: "100%" }}>
               <h3>Change Name</h3>
-              <p>
-                Your name can only be changed once.
-              </p>
+              <p>Your name can only be changed once.</p>
+              
+              <form onSubmit={handleNameChange} style={{ marginTop: "15px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                {nameError && <p style={{ color: "red", fontSize: "0.85rem", margin: 0 }}>{nameError}</p>}
+                {nameSuccess && <p style={{ color: "green", fontSize: "0.85rem", margin: 0 }}>{nameSuccess}</p>}
+                <input 
+                  type="text" 
+                  value={newName} 
+                  onChange={(e) => setNewName(e.target.value)}
+                  disabled={user?.nameChanged || nameLoading}
+                  style={{ padding: "10px", borderRadius: "9px", border: "1px solid #dbe1ea", width: "100%", maxWidth: "300px", outline: "none" }}
+                />
+                <button 
+                  type="submit" 
+                  disabled={user?.nameChanged || nameLoading}
+                  style={{ width: "fit-content", opacity: (user?.nameChanged || nameLoading) ? 0.7 : 1, cursor: (user?.nameChanged || nameLoading) ? "not-allowed" : "pointer" }}
+                >
+                  {user?.nameChanged ? "Already Changed" : (nameLoading ? "Saving..." : "Change Name")}
+                </button>
+              </form>
             </div>
-
-            <button type="button">
-              Change Name
-            </button>
           </div>
         </section>
-
 
         {/* SECURITY SECTION */}
         <section className="settings-section">
           <h2>Security</h2>
-
           <div className="setting-item">
-            <div>
+            <div style={{ width: "100%" }}>
               <h3>Change Password</h3>
-              <p>
-                Update your account password securely.
-              </p>
-            </div>
+              <p>Update your account password securely.</p>
+              
+              <form onSubmit={handlePasswordChange} style={{ marginTop: "15px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                {passwordError && <p style={{ color: "red", fontSize: "0.85rem", margin: 0 }}>{passwordError}</p>}
+                {passwordSuccess && <p style={{ color: "green", fontSize: "0.85rem", margin: 0 }}>{passwordSuccess}</p>}
+                
+                <input 
+                  type="password" 
+                  placeholder="Current Password"
+                  value={currentPassword} 
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  disabled={passwordLoading}
+                  style={{ padding: "10px", borderRadius: "9px", border: "1px solid #dbe1ea", width: "100%", maxWidth: "300px", outline: "none" }}
+                  required
+                />
+                <input 
+                  type="password" 
+                  placeholder="New Password"
+                  value={newPassword} 
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  disabled={passwordLoading}
+                  style={{ padding: "10px", borderRadius: "9px", border: "1px solid #dbe1ea", width: "100%", maxWidth: "300px", outline: "none" }}
+                  required
+                />
+                <input 
+                  type="password" 
+                  placeholder="Confirm New Password"
+                  value={confirmPassword} 
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={passwordLoading}
+                  style={{ padding: "10px", borderRadius: "9px", border: "1px solid #dbe1ea", width: "100%", maxWidth: "300px", outline: "none" }}
+                  required
+                />
 
-            <button type="button">
-              Change Password
-            </button>
+                <button 
+                  type="submit" 
+                  disabled={passwordLoading}
+                  style={{ width: "fit-content", opacity: passwordLoading ? 0.7 : 1, cursor: passwordLoading ? "not-allowed" : "pointer" }}
+                >
+                  {passwordLoading ? "Saving..." : "Change Password"}
+                </button>
+              </form>
+            </div>
           </div>
         </section>
-
 
         {/* CODING PREFERENCES - FOR LATER */}
         <section className="settings-section">
           <h2>Coding Preferences</h2>
-
           <div className="setting-item">
             <div>
               <h3>Preferred Language</h3>
-              <p>
-                Choose your preferred programming language.
-              </p>
+              <p>Choose your preferred programming language.</p>
             </div>
-
             <select defaultValue="">
-              <option value="" disabled>
-                Select language
-              </option>
-
-              <option value="javascript">
-                JavaScript
-              </option>
-
-              <option value="python">
-                Python
-              </option>
-
-              <option value="java">
-                Java
-              </option>
-
-              <option value="cpp">
-                C++
-              </option>
+              <option value="" disabled>Select language</option>
+              <option value="javascript">JavaScript</option>
+              <option value="python">Python</option>
+              <option value="java">Java</option>
+              <option value="cpp">C++</option>
             </select>
           </div>
         </section>
-
       </main>
-
     </div>
   );
 }

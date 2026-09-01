@@ -1,15 +1,31 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Profile.css";
+import { AuthContext } from "../context/AuthContext";
 //import { useState } from "react";
 
 function Profile() {
   const navigate = useNavigate();
+  const { user, setUser } = useContext(AuthContext);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
+  const handleLogout = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/users/logout",
+          {
+            method: "POST",
+            credentials: "include",
+          }
+        );
+
+        if (response.ok) {
+          setUser(null);
+          navigate("/login");
+        }
+      } catch (error) {
+        console.error("Logout failed:", error);
+      }
+    };
   return (
     <div className="profile-page">
       <header className="profile-header">
@@ -32,9 +48,14 @@ function Profile() {
           </div>
 
           <div>
-            <h2>User Name</h2>
-            <p>user@example.com</p>
-            <p>Member since: Coming soon</p>
+            <h2>{user?.name || "User"}</h2>
+            <p>{user?.email || "No email available"}</p>
+            <p>
+              Member since:{" "}
+              {user?.createdAt
+                ? new Date(user.createdAt).toLocaleDateString()
+                : "Not available"}
+            </p>
           </div>
         </section>
 
