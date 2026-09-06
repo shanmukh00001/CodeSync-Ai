@@ -1,13 +1,41 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Profile.css";
 import { AuthContext } from "../context/AuthContext";
-//import { useState } from "react";
 
 function Profile() {
   const navigate = useNavigate();
   const { user, setUser } = useContext(AuthContext);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [solvedData, setSolvedData] = useState({
+    solvedProblems: [],
+    stats: { totalSolved: 0, easy: 0, medium: 0, hard: 0 },
+  });
+  const [loadingSolved, setLoadingSolved] = useState(true);
+
+  useEffect(() => {
+    const fetchSolvedProblems = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/users/solved-problems", {
+          credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setSolvedData({
+            solvedProblems: Array.isArray(data.solvedProblems) ? data.solvedProblems : [],
+            stats: data.stats || { totalSolved: 0, easy: 0, medium: 0, hard: 0 },
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load solved problems:", err);
+      } finally {
+        setLoadingSolved(false);
+      }
+    };
+
+    fetchSolvedProblems();
+  }, []);
+
   const handleLogout = async () => {
       try {
         const response = await fetch(
@@ -65,22 +93,22 @@ function Profile() {
 
           <div className="stats-grid">
             <div>
-              <h3>0</h3>
+              <h3>{loadingSolved ? "…" : solvedData.stats.totalSolved}</h3>
               <p>Problems Solved</p>
             </div>
 
             <div>
-              <h3>0</h3>
+              <h3>{loadingSolved ? "…" : solvedData.stats.easy}</h3>
               <p>Easy</p>
             </div>
 
             <div>
-              <h3>0</h3>
+              <h3>{loadingSolved ? "…" : solvedData.stats.medium}</h3>
               <p>Medium</p>
             </div>
 
             <div>
-              <h3>0</h3>
+              <h3>{loadingSolved ? "…" : solvedData.stats.hard}</h3>
               <p>Hard</p>
             </div>
           </div>
@@ -92,21 +120,52 @@ function Profile() {
 
           <div className="stats-grid">
             <div>
-              <h3>0</h3>
-              <p>Rooms Created</p>
+              <h3>{user?.activeRoom ? 1 : 0}</h3>
+              <p>Active Room</p>
             </div>
 
             <div>
-              <h3>0</h3>
-              <p>Rooms Joined</p>
+              <h3>{Array.isArray(user?.recentRooms) ? user.recentRooms.length : 0}</h3>
+              <p>Recent Rooms</p>
             </div>
           </div>
         </section>
 
-        {/* Recent activity */}
+        {/* Recent activity / Solved Problems */}
         <section className="recent-activity">
           <h2>Recent Activity</h2>
-          <p>No recent activity yet.</p>
+          {loadingSolved ? (
+            <p>Loading activity…</p>
+          ) : solvedData.solvedProblems.length > 0 ? (
+            <div className="profile-solved-list">
+              {solvedData.solvedProblems.slice(0, 5).map((prob) => (
+                <div
+                  key={prob._id}
+                  className="profile-solved-item"
+                  onClick={() => navigate(`/problems/${prob.slug}`)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") navigate(`/problems/${prob.slug}`);
+                  }}
+                >
+                  <div className="profile-solved-main">
+                    <span className="profile-solved-title">{prob.title}</span>
+                    <span
+                      className={`difficulty-badge difficulty-${prob.difficulty?.toLowerCase() || "easy"}`}
+                    >
+                      {prob.difficulty}
+                    </span>
+                  </div>
+                  <div className="profile-solved-date">
+                    Solved on {new Date(prob.solvedAt).toLocaleDateString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p>No solved problems yet. Submit solutions in Problem Workspace to track progress.</p>
+          )}
         </section>
 
         <section className="logout-section">

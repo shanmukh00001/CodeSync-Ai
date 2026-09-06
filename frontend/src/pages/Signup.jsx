@@ -42,10 +42,20 @@ function Signup() {
         if (response.ok) {
           navigate("/login");
         } else {
-          const message =
-            data?.error?.message ||
-            data?.message ||
-            "Signup failed. Please try again.";
+          // Extract specific validation message from Zod fieldErrors if available
+          let message = "";
+          if (data?.error?.details?.fieldErrors) {
+            const firstField = Object.keys(data.error.details.fieldErrors)[0];
+            if (firstField && data.error.details.fieldErrors[firstField]?.length > 0) {
+              message = data.error.details.fieldErrors[firstField][0];
+            }
+          }
+          if (!message) {
+            message =
+              data?.error?.message ||
+              data?.message ||
+              "Signup failed. Please try again.";
+          }
           setError(message);
         }
         console.log(data);
@@ -70,6 +80,7 @@ function Signup() {
             placeholder="Enter your name"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            required
           />
 
           <label>Email</label>
@@ -78,14 +89,17 @@ function Signup() {
             placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
 
           <label>Password</label>
           <input
             type="password"
-            placeholder="Create a password"
+            placeholder="Create a password (min. 8 characters)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            minLength={8}
+            required
           />
 
           <label>Confirm Password</label>
@@ -94,6 +108,8 @@ function Signup() {
             placeholder="Confirm your password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            minLength={8}
+            required
           />
 
 

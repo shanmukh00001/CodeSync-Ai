@@ -15,9 +15,34 @@ const userSchema = new mongoose.Schema({
         required: true
     },
     activeRoom: {
-    type: String,
-    default: null
-},
+        type: String,
+        default: null
+    },
+    recentRooms: [
+        {
+            room: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Room"
+            },
+            joinedAt: {
+                type: Date,
+                default: Date.now
+            }
+        }
+    ],
+    solvedProblems: [
+        {
+            problem: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Problem",
+                required: true
+            },
+            solvedAt: {
+                type: Date,
+                default: Date.now
+            }
+        }
+    ],
     nameChanged: {
         type: Boolean,
         default: false

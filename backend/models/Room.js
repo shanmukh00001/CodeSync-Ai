@@ -25,17 +25,40 @@ users: [
     }
 ],
 
-language: {
+ language: {
     type: String,
     default: "cpp"
-},
+ },
 
- code: {
-        type: String,
-        default: ""
-    },
+  code: {
+         type: String,
+         default: ""
+     },
 
-  
+  selectedProblem: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Problem",
+    default: null
+  },
+
+  status: {
+    type: String,
+    enum: ["ACTIVE", "CLOSED"],
+    default: "ACTIVE",
+    index: true,
+  },
+
+  endedAt: {
+    type: Date,
+    default: null,
+    index: true,
+  },
+
+  emptySince: {
+    type: Date,
+    default: null,
+    index: true
+  }
 });
 
 

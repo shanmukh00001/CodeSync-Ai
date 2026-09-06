@@ -8,6 +8,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
+import ProblemWorkspace from "./pages/ProblemWorkspace";
 function App() {
   return (
     <BrowserRouter>
@@ -43,6 +44,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Room />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/problems/:slug"
+          element={
+            <ProtectedRoute>
+              <ProblemWorkspace />
             </ProtectedRoute>
           }
         />

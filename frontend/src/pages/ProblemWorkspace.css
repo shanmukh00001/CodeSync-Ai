@@ -1,0 +1,556 @@
+/* Container & Two Panel Grid Layout */
+.problem-workspace {
+  display: grid;
+  /* --problem-fraction is provided as an inline style (0.3 - 0.7).
+     The two panels share the remaining space via minmax(0, 1fr). */
+  grid-template-columns: minmax(0, calc(var(--problem-fraction, 0.5) * 100%)) 6px minmax(0, 1fr);
+  height: 100vh;
+  background-color: #0f172a;
+  color: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  overflow: hidden;
+}
+
+/* Disable text selection globally while a drag is in progress. */
+body.workspace-dragging,
+body.workspace-dragging * {
+  user-select: none !important;
+  cursor: inherit !important;
+}
+
+/* Loading & Error States */
+.workspace-status-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #0f172a;
+  color: #f8fafc;
+  text-align: center;
+  padding: 20px;
+}
+
+.workspace-status-container.error {
+  color: #f87171;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #38bdf8;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* LEFT PANEL - Problem Details or Submissions */
+.problem-panel {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: #0f172a;
+}
+
+/* Tabs Header */
+.workspace-tabs-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #0b1120;
+  border-bottom: 1px solid #1e293b;
+  flex-shrink: 0;
+}
+
+.workspace-back-btn {
+  height: 32px;
+  width: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  background: #1e293b;
+  color: #cbd5e1;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.workspace-back-btn:hover {
+  background: #334155;
+  color: #f8fafc;
+  border-color: #475569;
+}
+
+.workspace-nav-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #1e293b;
+  padding: 3px;
+  border-radius: 8px;
+}
+
+.workspace-tab-btn {
+  height: 30px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.workspace-tab-btn:hover {
+  color: #f8fafc;
+}
+
+.workspace-tab-btn.is-active {
+  background: #0f172a;
+  color: #f8fafc;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.workspace-tab-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4);
+}
+
+/* Problem description scrollable area */
+.problem-content-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Custom scrollbar for problem content */
+.problem-content-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.problem-content-scroll::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+.problem-content-scroll::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+.problem-content-scroll::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+.problem-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #1e293b;
+}
+
+.problem-title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.2;
+}
+
+.difficulty-badge {
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+}
+
+.difficulty-easy {
+  background-color: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.difficulty-medium {
+  background-color: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.difficulty-hard {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.problem-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.problem-description {
+  color: #94a3b8;
+  font-size: 0.975rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* Examples */
+.example-card {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.example-header {
+  background-color: #0f172a;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #94a3b8;
+  border-bottom: 1px solid #334155;
+}
+
+.example-content {
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  color: #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.example-content p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.example-content code,
+.constraints-list code {
+  background-color: #0f172a;
+  color: #38bdf8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: "Fira Code", "Cascadia Code", Consolas, monospace;
+  font-size: 0.85rem;
+}
+
+/* Constraints */
+.constraints-list {
+  margin: 0;
+  padding-left: 20px;
+  color: #94a3b8;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+
+/* Tags */
+.tags-section {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #1e293b;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag-chip {
+  background-color: #1e293b;
+  color: #38bdf8;
+  border: 1px solid #334155;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* RIGHT PANEL - Editor & Output */
+.editor-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #0b1120;
+  min-width: 0;
+}
+
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background-color: #0f172a;
+  border-bottom: 1px solid #1e293b;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toolbar-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.language-select {
+  background-color: #1e293b;
+  color: #f8fafc;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.language-select:focus {
+  border-color: #38bdf8;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn {
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.btn-run {
+  background-color: #334155;
+  color: #f8fafc;
+}
+
+.btn-run:hover {
+  background-color: #475569;
+}
+
+.btn-submit {
+  background-color: #16a34a;
+  color: #ffffff;
+}
+
+.btn-submit:hover {
+  background-color: #15803d;
+}
+
+.editor-container {
+  /* Takes all remaining vertical space above the output panel + handle. */
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  min-height: 0;
+}
+
+.code-editor {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  resize: none;
+  background-color: #0b1120;
+  color: #e2e8f0;
+  font-family: "Fira Code", "Cascadia Code", Consolas, "Courier New", monospace;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  padding: 16px 20px;
+  border: none;
+  outline: none;
+  box-sizing: border-box;
+  tab-size: 2;
+}
+
+.output-panel {
+  /* Height is driven by the --output-height CSS variable, set inline by the component. */
+  flex: 0 0 auto;
+  height: var(--output-height, 220px);
+  background-color: #0f172a;
+  border-top: 1px solid #1e293b;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.output-header {
+  padding: 8px 20px;
+  background-color: #1e293b;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #94a3b8;
+  border-bottom: 1px solid #334155;
+}
+
+.output-content {
+  flex: 1;
+  padding: 14px 20px;
+  overflow-y: auto;
+  font-family: "Fira Code", "Cascadia Code", Consolas, "Courier New", monospace;
+  font-size: 0.875rem;
+}
+
+.output-content pre {
+  margin: 0;
+  color: #cbd5e1;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ================= RESIZABLE PANELS ================= */
+/* Shared base style for both resize handles. */
+.resize-handle {
+  position: relative;
+  background-color: transparent;
+  flex-shrink: 0;
+  /* Allow the handle to remain interactive while keeping its visual footprint subtle. */
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Prevent the handle from being selectable like text. */
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+/* Visual indicator inside the handle (the actual visible "grip"). */
+.resize-handle-grip {
+  background-color: #1e293b;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+/* ---------------- Vertical handle (between problem & editor) ---------------- */
+.resize-handle-vertical {
+  cursor: col-resize;
+  width: 6px;
+}
+
+.resize-handle-vertical .resize-handle-grip {
+  width: 2px;
+  height: 36px;
+  border-radius: 1px;
+}
+
+.resize-handle-vertical:hover .resize-handle-grip,
+.resize-handle-vertical:active .resize-handle-grip,
+.resize-handle-vertical:focus-visible .resize-handle-grip {
+  /* Subtle accent highlight on hover / active / keyboard focus. */
+  background-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+  transform: scaleY(1.05);
+}
+
+/* ---------------- Horizontal handle (between editor & output) ---------------- */
+.resize-handle-horizontal {
+  cursor: row-resize;
+  height: 6px;
+}
+
+.resize-handle-horizontal .resize-handle-grip {
+  height: 2px;
+  width: 56px;
+  border-radius: 1px;
+}
+
+.resize-handle-horizontal:hover .resize-handle-grip,
+.resize-handle-horizontal:active .resize-handle-grip,
+.resize-handle-horizontal:focus-visible .resize-handle-grip {
+  /* Subtle accent highlight on hover / active / keyboard focus. */
+  background-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+  transform: scaleX(1.05);
+}
+
+.resize-handle:focus-visible {
+  outline: none;
+}
+
+/* While a resize drag is active, force the matching cursor everywhere on the page. */
+body.workspace-dragging .resize-handle-vertical,
+body.workspace-dragging .resize-handle-vertical ~ .editor-panel {
+  cursor: col-resize !important;
+}
+
+body.workspace-dragging .resize-handle-horizontal {
+  cursor: row-resize !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .problem-workspace {
+    /* Single-column stack on small screens; the variable has no effect here. */
+    grid-template-columns: 1fr;
+    height: auto;
+    overflow: auto;
+  }
+
+  .problem-panel {
+    border-right: none;
+    border-bottom: 1px solid #1e293b;
+    height: auto;
+    max-height: 600px;
+  }
+
+  .editor-panel {
+    height: 600px;
+  }
+
+  /* Hide both resize handles on mobile: there is no split to drag. */
+  .resize-handle {
+    display: none;
+  }
+}

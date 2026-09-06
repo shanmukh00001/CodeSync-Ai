@@ -11,14 +11,32 @@ const app = express();
 const testRoutes = require("./routes/testRoutes");
 const userRoutes = require("./routes/userRoutes");
 const roomRoutes = require("./routes/roomRoutes");
+const problemRoutes = require("./routes/problemRoutes");
+const submissionRoutes = require("./routes/submissionRoutes");
+const discussionRoutes = require("./routes/discussionRoutes");
 const errorMiddleware = require("./middleware/errorMiddleware");
 //middleware
 
 app.use(express.json());//allows user to send or read data
 app.use(cookieParser());
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:5174",
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps, curl, postman) or matching allowed origins / local dev ports
+      if (!origin || allowedOrigins.includes(origin) || /^http:\/\/localhost:\d+$/.test(origin) || /^http:\/\/127\.0\.0\.1:\d+$/.test(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
@@ -43,12 +61,24 @@ app.use("/", testRoutes);
 app.use("/api/users", userRoutes);
 //app.use("/api/users", userRoutes);
 app.use("/api/rooms", roomRoutes);
-
+app.use("/api/problems", problemRoutes);
+app.use("/api/submissions", submissionRoutes);
+app.use("/api/discussions", discussionRoutes);
 // Centralized error handler must be mounted LAST so it can catch errors
 // forwarded from any route above (Stage 1.2 DoD, Section 10).
 app.use(errorMiddleware);
 
 //start server
-app.listen(5000, () => {
+const http = require("http");
+const { initSocket } = require("./socket");
+const { startRoomCleanupJob } = require("./services/roomCleanupService");
+
+const server = http.createServer(app);
+initSocket(server, allowedOrigins);
+
+// Start periodic cleanup of abandoned rooms (runs every 60s, checks 10-min TTL)
+startRoomCleanupJob();
+
+server.listen(5000, () => {
     console.log("Server is running on port 5000");
 });

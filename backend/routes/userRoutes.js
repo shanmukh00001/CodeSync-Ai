@@ -8,6 +8,7 @@ const validate = require("../middleware/validate");
 const { authLimiter, registerLimiter } = require("../middleware/rateLimiters");
 const { AppError } = require("../middleware/errorMiddleware");
 const User = require("../models/User");
+const Room = require("../models/Room");
 
 
 const router=express.Router();
@@ -151,6 +152,42 @@ router.get("/me", protect, async (req, res, next) => {
     }
 });
 
+// GET /api/users/recent-rooms - returns top 2 recently joined rooms
+router.get("/recent-rooms", protect, async (req, res, next) => {
+    try {
+        const user = await User.findById(req.userId).populate({
+            path: "recentRooms.room",
+            select: "roomId roomName language users createdBy status"
+        });
+
+        if (!user) {
+            return next(new AppError("User not found", 404, "USER_NOT_FOUND"));
+        }
+
+        const recentList = Array.isArray(user.recentRooms) ? user.recentRooms : [];
+
+        // Filter out any entries where the room document was deleted/null, sort by joinedAt desc, slice top 2
+        const validRecent = recentList
+            .filter((item) => item?.room && item.room._id)
+            .sort((a, b) => new Date(b.joinedAt) - new Date(a.joinedAt))
+            .slice(0, 2)
+            .map((item) => ({
+                roomId: item.room.roomId,
+                roomName: item.room.roomName,
+                language: item.room.language,
+                status: item.room.status || "ACTIVE",
+                userCount: Array.isArray(item.room.users) ? item.room.users.length : 1,
+                joinedAt: item.joinedAt
+            }));
+
+        res.status(200).json({
+            recentRooms: validRecent
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
 // Update name
 router.put("/name", protect, async (req, res, next) => {
     try {
@@ -212,6 +249,50 @@ router.put("/password", protect, async (req, res, next) => {
         await user.save();
 
         res.status(200).json({ message: "Password updated successfully" });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// GET /api/users/solved-problems - returns the authenticated user's solved problems
+router.get("/solved-problems", protect, async (req, res, next) => {
+    try {
+        const user = await User.findById(req.userId).populate({
+            path: "solvedProblems.problem",
+            select: "_id title slug difficulty tags"
+        });
+
+        if (!user) {
+            return next(new AppError("User not found", 404, "USER_NOT_FOUND"));
+        }
+
+        const rawList = Array.isArray(user.solvedProblems) ? user.solvedProblems : [];
+
+        // Filter out any entries where the Problem document was deleted/null, sort by solvedAt desc
+        const validSolved = rawList
+            .filter((item) => item?.problem && item.problem._id)
+            .sort((a, b) => new Date(b.solvedAt || 0) - new Date(a.solvedAt || 0))
+            .map((item) => ({
+                _id: item.problem._id,
+                title: item.problem.title,
+                slug: item.problem.slug,
+                difficulty: item.problem.difficulty,
+                tags: item.problem.tags || [],
+                solvedAt: item.solvedAt
+            }));
+
+        // Calculate statistics for profile cards
+        const stats = {
+            totalSolved: validSolved.length,
+            easy: validSolved.filter((p) => p.difficulty === "Easy").length,
+            medium: validSolved.filter((p) => p.difficulty === "Medium").length,
+            hard: validSolved.filter((p) => p.difficulty === "Hard").length,
+        };
+
+        res.status(200).json({
+            solvedProblems: validSolved,
+            stats
+        });
     } catch (error) {
         next(error);
     }

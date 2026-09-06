@@ -119,20 +119,20 @@ function Settings() {
               <h3>Change Name</h3>
               <p>Your name can only be changed once.</p>
               
-              <form onSubmit={handleNameChange} style={{ marginTop: "15px", display: "flex", flexDirection: "column", gap: "10px" }}>
-                {nameError && <p style={{ color: "red", fontSize: "0.85rem", margin: 0 }}>{nameError}</p>}
-                {nameSuccess && <p style={{ color: "green", fontSize: "0.85rem", margin: 0 }}>{nameSuccess}</p>}
+              <form onSubmit={handleNameChange} className="settings-form">
+                {nameError && <p className="form-error-msg">{nameError}</p>}
+                {nameSuccess && <p className="form-success-msg">{nameSuccess}</p>}
                 <input 
                   type="text" 
                   value={newName} 
                   onChange={(e) => setNewName(e.target.value)}
                   disabled={user?.nameChanged || nameLoading}
-                  style={{ padding: "10px", borderRadius: "9px", border: "1px solid #dbe1ea", width: "100%", maxWidth: "300px", outline: "none" }}
+                  className="setting-input"
                 />
                 <button 
                   type="submit" 
                   disabled={user?.nameChanged || nameLoading}
-                  style={{ width: "fit-content", opacity: (user?.nameChanged || nameLoading) ? 0.7 : 1, cursor: (user?.nameChanged || nameLoading) ? "not-allowed" : "pointer" }}
+                  className="setting-submit-btn"
                 >
                   {user?.nameChanged ? "Already Changed" : (nameLoading ? "Saving..." : "Change Name")}
                 </button>
@@ -149,9 +149,9 @@ function Settings() {
               <h3>Change Password</h3>
               <p>Update your account password securely.</p>
               
-              <form onSubmit={handlePasswordChange} style={{ marginTop: "15px", display: "flex", flexDirection: "column", gap: "10px" }}>
-                {passwordError && <p style={{ color: "red", fontSize: "0.85rem", margin: 0 }}>{passwordError}</p>}
-                {passwordSuccess && <p style={{ color: "green", fontSize: "0.85rem", margin: 0 }}>{passwordSuccess}</p>}
+              <form onSubmit={handlePasswordChange} className="settings-form">
+                {passwordError && <p className="form-error-msg">{passwordError}</p>}
+                {passwordSuccess && <p className="form-success-msg">{passwordSuccess}</p>}
                 
                 <input 
                   type="password" 
@@ -159,7 +159,7 @@ function Settings() {
                   value={currentPassword} 
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   disabled={passwordLoading}
-                  style={{ padding: "10px", borderRadius: "9px", border: "1px solid #dbe1ea", width: "100%", maxWidth: "300px", outline: "none" }}
+                  className="setting-input"
                   required
                 />
                 <input 
@@ -168,7 +168,7 @@ function Settings() {
                   value={newPassword} 
                   onChange={(e) => setNewPassword(e.target.value)}
                   disabled={passwordLoading}
-                  style={{ padding: "10px", borderRadius: "9px", border: "1px solid #dbe1ea", width: "100%", maxWidth: "300px", outline: "none" }}
+                  className="setting-input"
                   required
                 />
                 <input 
@@ -177,14 +177,14 @@ function Settings() {
                   value={confirmPassword} 
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={passwordLoading}
-                  style={{ padding: "10px", borderRadius: "9px", border: "1px solid #dbe1ea", width: "100%", maxWidth: "300px", outline: "none" }}
+                  className="setting-input"
                   required
                 />
 
                 <button 
                   type="submit" 
                   disabled={passwordLoading}
-                  style={{ width: "fit-content", opacity: passwordLoading ? 0.7 : 1, cursor: passwordLoading ? "not-allowed" : "pointer" }}
+                  className="setting-submit-btn"
                 >
                   {passwordLoading ? "Saving..." : "Change Password"}
                 </button>

@@ -7,7 +7,7 @@ const checkRoomMember = async (req, res, next) => {
         const { roomId } = req.params;
 
         // Find the room
-        const room = await Room.findOne({ roomId });
+        const room = await Room.findOne({ roomId }).populate("selectedProblem");
 
         // Check if the room exists
         if (!room) {
