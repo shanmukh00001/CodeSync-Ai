@@ -86,9 +86,6 @@ function SubmissionsView({ problemId, currentLanguage, refreshTrigger }) {
     <div className="submissions-view-container">
       <div className="submissions-view-header">
         <div className="submissions-header-left">
-          <span className="submissions-title-icon" aria-hidden="true">
-            📋
-          </span>
           <h2 className="submissions-view-title">Submission History</h2>
         </div>
         <button
@@ -98,7 +95,7 @@ function SubmissionsView({ problemId, currentLanguage, refreshTrigger }) {
           disabled={loading}
           aria-label="Refresh submissions"
         >
-          {loading ? "Refreshing…" : "↻ Refresh"}
+          {loading ? "Refreshing…" : "Refresh"}
         </button>
       </div>
 
@@ -106,7 +103,7 @@ function SubmissionsView({ problemId, currentLanguage, refreshTrigger }) {
         {loading ? (
           <div className="submissions-state-box">
             <div className="submissions-spinner" />
-            <p>Loading submission history…</p>
+            <p>Loading submission records…</p>
           </div>
         ) : error ? (
           <div className="submissions-state-box submissions-error-box">
@@ -116,23 +113,20 @@ function SubmissionsView({ problemId, currentLanguage, refreshTrigger }) {
               className="submissions-retry-btn"
               onClick={fetchSubmissions}
             >
-              Try Again
+              Retry
             </button>
           </div>
         ) : submissions.length === 0 ? (
           <div className="submissions-empty-state">
-            <div className="submissions-empty-icon" aria-hidden="true">
-              📥
-            </div>
-            <h3 className="submissions-empty-heading">No submissions yet</h3>
+            <h3 className="submissions-empty-heading">No Evaluation History</h3>
             <p className="submissions-empty-text">
-              Your submitted solutions will appear here with execution status,
-              test case details, and timestamps.
+              Submitted solutions for this problem will be logged here with pass/fail metrics,
+              execution benchmarks, and test diagnostics.
             </p>
             <div className="submissions-empty-tip">
-              <span>Tip:</span> Write your solution in{" "}
-              <strong>{formatLanguage(currentLanguage)}</strong> and click the{" "}
-              <strong>Submit</strong> button above the code editor to submit.
+              <span>TARGET RUNTIME:</span> Write code in{" "}
+              <strong>{formatLanguage(currentLanguage)}</strong> and trigger{" "}
+              <strong>Submit</strong> to evaluate against the full benchmark suite.
             </div>
           </div>
         ) : (
@@ -173,9 +167,9 @@ function SubmissionsView({ problemId, currentLanguage, refreshTrigger }) {
                       )}`}
                     >
                       {sub.status === "Accepted"
-                        ? "✓ Accepted"
+                        ? "Accepted"
                         : sub.status === "Wrong Answer"
-                        ? "✗ Wrong Answer"
+                        ? "Wrong Answer"
                         : sub.status}
                     </span>
                     <span className="submission-time">
@@ -185,15 +179,14 @@ function SubmissionsView({ problemId, currentLanguage, refreshTrigger }) {
 
                   <div className="submission-card-meta">
                     <div className="submission-meta-item">
-                      <span className="submission-meta-label">Passed:</span>
+                      <span className="submission-meta-label">PASSED:</span>
                       <span className="submission-meta-val">
-                        {sub.passedTestCases || 0} / {sub.totalTestCases || 0}{" "}
-                        test cases
+                        {sub.passedTestCases || 0} / {sub.totalTestCases || 0}
                       </span>
                     </div>
 
                     <div className="submission-meta-item">
-                      <span className="submission-meta-label">Language:</span>
+                      <span className="submission-meta-label">LANG:</span>
                       <span className="submission-language-chip">
                         {formatLanguage(sub.language)}
                       </span>
@@ -201,7 +194,7 @@ function SubmissionsView({ problemId, currentLanguage, refreshTrigger }) {
 
                     {typeof sub.runtimeMs === "number" && sub.runtimeMs > 0 && (
                       <div className="submission-meta-item">
-                        <span className="submission-meta-label">Runtime:</span>
+                        <span className="submission-meta-label">TIME:</span>
                         <span className="submission-meta-val">
                           {sub.runtimeMs} ms
                         </span>
@@ -237,7 +230,7 @@ function SubmissionsView({ problemId, currentLanguage, refreshTrigger }) {
                             </code>
                           </div>
                           <div className="submission-case-row">
-                            <span>Your output:</span>
+                            <span>Output:</span>
                             <code>
                               {typeof sub.failedTestCase.actual === "object"
                                 ? JSON.stringify(sub.failedTestCase.actual)
@@ -253,8 +246,8 @@ function SubmissionsView({ problemId, currentLanguage, refreshTrigger }) {
                             Failed Test Case:
                           </div>
                           <div className="submission-case-row">
-                            <span>Note:</span>
-                            <code>Hidden test failed</code>
+                            <span>Diagnostic:</span>
+                            <code>Hidden test case failed</code>
                           </div>
                         </div>
                       )}
@@ -262,7 +255,7 @@ function SubmissionsView({ problemId, currentLanguage, refreshTrigger }) {
                       {sub.code && (
                         <div className="submission-code-preview">
                           <div className="submission-code-header">
-                            Submitted Code:
+                            Submitted Source:
                           </div>
                           <pre className="submission-code-block">
                             {sub.code}

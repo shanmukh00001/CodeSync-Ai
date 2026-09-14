@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import { AuthContext } from "../context/AuthContext.jsx";
 import SubmissionsView from "../components/SubmissionsView";
+import AIReviewPanel from "../components/AIReviewPanel";
 import "./Dashboard.css";
 import "./Room.css";
 
@@ -156,10 +157,21 @@ function Room() {
 
   // ================= OUTPUT & EXECUTION =================
   const [output, setOutput] = useState("Run your code to see the output.");
+  const [outputCollapsed, setOutputCollapsed] = useState(false);
+  const [lastExecutionStatus, setLastExecutionStatus] = useState(null);
+  const [lastExecutionSummary, setLastExecutionSummary] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionHistoryVersion, setSubmissionHistoryVersion] = useState(0);
   const executionTokenRef = useRef(0);
+
+  // ================= AI CODE REVIEW =================
+  const [aiReview, setAiReview] = useState(null);
+  const [isReviewing, setIsReviewing] = useState(false);
+  const [aiReviewError, setAiReviewError] = useState("");
+  const [reviewCooldown, setReviewCooldown] = useState(0);
+  const reviewTokenRef = useRef(0);
+  const cooldownTimerRef = useRef(null);
 
   // ================= LEAVE / END =================
   const [leaving, setLeaving] = useState(false);
@@ -1039,6 +1051,7 @@ function Room() {
 
     if (!activeProblem?._id) {
       setOutput("Please select a problem first before running code.");
+      setOutputCollapsed(false);
       return;
     }
 
@@ -1046,6 +1059,7 @@ function Room() {
     executionTokenRef.current = currentToken;
 
     setIsRunning(true);
+    setOutputCollapsed(false);
     setOutput("Running code on visible test cases…");
 
     const codeSnapshot = code || "";
@@ -1075,6 +1089,26 @@ function Room() {
 
       if (response.ok && data?.result) {
         setOutput(formatExecutionResult(data.result));
+        setOutputCollapsed(false);
+        const res = data.result;
+        setLastExecutionSummary({
+          status: res.status === "accepted" ? "Accepted" : res.status === "wrong_answer" ? "Wrong Answer" : res.status === "compilation_error" ? "Compilation Error" : res.status === "runtime_error" ? "Runtime Error" : res.status === "time_limit_exceeded" ? "Time Limit Exceeded" : "Error",
+          passedTestCases: typeof res.passedTestCases === "number" ? res.passedTestCases : 0,
+          totalTestCases: typeof res.totalTestCases === "number" ? res.totalTestCases : 0,
+          runtimeMs: typeof res.runtimeMs === "number" ? res.runtimeMs : undefined,
+          memoryKb: typeof res.memoryKb === "number" ? res.memoryKb : undefined,
+        });
+        const statusLabel = data.result.status === "accepted" ? "Accepted" : data.result.status === "wrong_answer" ? "Wrong Answer" : data.result.status === "compilation_error" ? "Compilation Error" : data.result.status === "runtime_error" ? "Runtime Error" : data.result.status === "time_limit_exceeded" ? "Time Limit Exceeded" : "Error";
+        const metaStr = [
+          statusLabel,
+          typeof data.result.runtimeMs === "number" ? `${data.result.runtimeMs} ms` : null,
+          typeof data.result.memoryKb === "number" ? `${data.result.memoryKb} KB` : null,
+        ].filter(Boolean).join(" · ");
+        setLastExecutionStatus({
+          label: statusLabel,
+          meta: metaStr,
+          isSuccess: data.result.status === "accepted",
+        });
       } else {
         const errorMsg =
           data?.error?.message ||
@@ -1089,12 +1123,24 @@ function Room() {
             ? "Validation error in execution request."
             : "Execution engine error. Please try again.");
         setOutput(`✗ Execution Failed\n\n${errorMsg}`);
+        setOutputCollapsed(false);
+        setLastExecutionStatus({
+          label: "Failed",
+          meta: "Execution Failed",
+          isSuccess: false,
+        });
       }
     } catch {
       if (executionTokenRef.current === currentToken) {
         setOutput(
           "✗ Network Error\n\nCould not connect to the execution server. Please check your connection and try again."
         );
+        setOutputCollapsed(false);
+        setLastExecutionStatus({
+          label: "Network Error",
+          meta: "Connection Failed",
+          isSuccess: false,
+        });
       }
     } finally {
       if (executionTokenRef.current === currentToken) {
@@ -1108,6 +1154,7 @@ function Room() {
 
     if (!activeProblem?._id) {
       setOutput("Please select a problem first before submitting.");
+      setOutputCollapsed(false);
       return;
     }
 
@@ -1115,6 +1162,7 @@ function Room() {
     executionTokenRef.current = currentToken;
 
     setIsSubmitting(true);
+    setOutputCollapsed(false);
     setOutput("Submitting code to full evaluation pipeline…");
 
     const codeSnapshot = code || "";
@@ -1144,7 +1192,28 @@ function Room() {
 
       if (response.ok && data?.submission) {
         setOutput(formatSubmissionResult(data.submission));
+        setOutputCollapsed(false);
         setSubmissionHistoryVersion((v) => v + 1);
+        const sub = data.submission;
+        setLastExecutionSummary({
+          status: sub.status || "Unknown",
+          passedTestCases: typeof sub.passedTestCases === "number" ? sub.passedTestCases : 0,
+          totalTestCases: typeof sub.totalTestCases === "number" ? sub.totalTestCases : 0,
+          runtimeMs: typeof sub.runtimeMs === "number" ? sub.runtimeMs : undefined,
+          memoryKb: typeof sub.memoryKb === "number" ? sub.memoryKb : undefined,
+        });
+        const statusLabel = data.submission.status || "Submitted";
+        const metaStr = [
+          statusLabel,
+          typeof data.submission.runtimeMs === "number" && data.submission.runtimeMs > 0 ? `${data.submission.runtimeMs} ms` : null,
+          typeof data.submission.memoryKb === "number" && data.submission.memoryKb > 0 ? `${data.submission.memoryKb} KB` : null,
+          typeof data.submission.passedTestCases === "number" && typeof data.submission.totalTestCases === "number" ? `${data.submission.passedTestCases}/${data.submission.totalTestCases} tests` : null,
+        ].filter(Boolean).join(" · ");
+        setLastExecutionStatus({
+          label: statusLabel,
+          meta: metaStr,
+          isSuccess: data.submission.status === "Accepted",
+        });
       } else {
         const errorMsg =
           data?.error?.message ||
@@ -1159,16 +1228,137 @@ function Room() {
             ? "Validation error in submission request."
             : "Submission evaluation error. Please try again.");
         setOutput(`✗ Submission Failed\n\n${errorMsg}`);
+        setOutputCollapsed(false);
+        setLastExecutionStatus({
+          label: "Failed",
+          meta: "Submission Failed",
+          isSuccess: false,
+        });
       }
     } catch {
       if (executionTokenRef.current === currentToken) {
         setOutput(
           "✗ Network Error\n\nCould not connect to the submission server. Please check your connection and try again."
         );
+        setOutputCollapsed(false);
+        setLastExecutionStatus({
+          label: "Network Error",
+          meta: "Connection Failed",
+          isSuccess: false,
+        });
       }
     } finally {
       if (executionTokenRef.current === currentToken) {
         setIsSubmitting(false);
+      }
+    }
+  };
+
+  // Cooldown timer interval cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (cooldownTimerRef.current) {
+        clearInterval(cooldownTimerRef.current);
+        cooldownTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  const handleReviewCode = async () => {
+    if (isReviewing || reviewCooldown > 0 || isClosed) return;
+
+    if (!activeProblem?._id) {
+      setAiReviewError("Please select a problem first before requesting an AI review.");
+      setLeftPanelTab("review");
+      return;
+    }
+
+    const currentCode = (code || "").trim();
+    if (!currentCode) {
+      setAiReviewError("Please write some code before requesting an AI review.");
+      setLeftPanelTab("review");
+      return;
+    }
+
+    // Invalidate prior review requests
+    const currentToken = reviewTokenRef.current + 1;
+    reviewTokenRef.current = currentToken;
+
+    setIsReviewing(true);
+    setAiReviewError("");
+    setLeftPanelTab("review");
+
+    // Start 5-second client-side cooldown
+    setReviewCooldown(5);
+    if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+    cooldownTimerRef.current = setInterval(() => {
+      setReviewCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(cooldownTimerRef.current);
+          cooldownTimerRef.current = null;
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    const codeSnapshot = code || "";
+    const problemIdSnapshot = activeProblem._id;
+    const languageSnapshot = room?.language || "cpp";
+    const roomIdSnapshot = room?.roomId || routeRoomId || undefined;
+    const executionSummarySnapshot = lastExecutionSummary || undefined;
+
+    try {
+      const response = await fetch("http://localhost:5000/api/submissions/review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          problemId: problemIdSnapshot,
+          language: languageSnapshot,
+          code: codeSnapshot,
+          roomId: roomIdSnapshot,
+          lastExecutionResult: executionSummarySnapshot,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (reviewTokenRef.current !== currentToken) {
+        return;
+      }
+
+      if (response.ok && data?.review) {
+        setAiReview(data.review);
+        setAiReviewError("");
+      } else {
+        const errorMsg =
+          data?.error?.message ||
+          data?.message ||
+          (response.status === 429
+            ? "AI review rate limit reached. Please wait a minute before requesting another review."
+            : response.status === 503
+            ? "AI review is currently unavailable."
+            : response.status === 504
+            ? "AI review timed out. Please try again with a smaller code sample."
+            : response.status === 502
+            ? "AI review could not be completed. Please retry."
+            : response.status === 401
+            ? "Authentication required. Please log in again."
+            : response.status === 403
+            ? "You are not authorized to request reviews in this room."
+            : response.status === 400
+            ? "Cannot request AI review: " + (data?.error?.code === "ROOM_CLOSED" ? "room is closed" : "invalid request")
+            : "AI review service error. Please try again.");
+        setAiReviewError(errorMsg);
+      }
+    } catch {
+      if (reviewTokenRef.current === currentToken) {
+        setAiReviewError("Could not connect to the AI review service. Please check your connection and try again.");
+      }
+    } finally {
+      if (reviewTokenRef.current === currentToken) {
+        setIsReviewing(false);
       }
     }
   };
@@ -1532,7 +1722,7 @@ function Room() {
 
       {isClosed && (
         <div className="room-closed-banner" role="status">
-          <span aria-hidden="true">🔒</span>
+          <span className="room-closed-banner-tag">CLOSED</span>
           <span>This room has been ended by the host. Discussion and code execution are closed.</span>
         </div>
       )}
@@ -1554,7 +1744,7 @@ function Room() {
                 }`}
                 onClick={() => setLeftPanelTab("problem")}
               >
-                📄 Problem
+                Problem
               </button>
               <button
                 type="button"
@@ -1565,7 +1755,21 @@ function Room() {
                 }`}
                 onClick={() => setLeftPanelTab("submissions")}
               >
-                📋 Submissions
+                Submissions
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={leftPanelTab === "review"}
+                className={`room-tab-btn ${
+                  leftPanelTab === "review" ? "is-active" : ""
+                }`}
+                onClick={() => setLeftPanelTab("review")}
+              >
+                AI Review
+                {aiReview && !isReviewing && !aiReviewError && (
+                  <span className="room-tab-dot" aria-label="Review available" />
+                )}
               </button>
             </div>
             <span className="room-panel-meta">
@@ -1579,6 +1783,15 @@ function Room() {
                 problemId={activeProblem?._id}
                 currentLanguage={room?.language || "cpp"}
                 refreshTrigger={submissionHistoryVersion}
+              />
+            </div>
+          ) : leftPanelTab === "review" ? (
+            <div className="room-review-container">
+              <AIReviewPanel
+                review={aiReview}
+                loading={isReviewing}
+                error={aiReviewError}
+                onClose={() => setLeftPanelTab("problem")}
               />
             </div>
           ) : (
@@ -1610,20 +1823,20 @@ function Room() {
                 }`}
                 onClick={() => !isClosed && setPickerOpen((prev) => !prev)}
                 disabled={isClosed}
-                aria-expanded={pickerOpen}
                 aria-haspopup="dialog"
-                aria-label={
-                  activeProblem
-                    ? `Change problem from ${activeProblem.title}`
-                    : "Search and select a problem"
-                }
+                aria-expanded={pickerOpen}
+                aria-label="Select a problem for this room"
               >
-                <span className="room-problem-search-icon">🔍</span>
-                <span className="room-problem-search-text">
-                  {activeProblem ? activeProblem.title : "Search problems…"}
+                <span className="room-problem-search-icon" aria-hidden="true">
+                  🔍
                 </span>
-                <span className="room-problem-search-action">
-                  {activeProblem ? "Change" : "Browse"}
+                <span className="room-problem-search-text">
+                  {activeProblem
+                    ? activeProblem.title
+                    : "Select a challenge for this room…"}
+                </span>
+                <span className="room-problem-search-chevron" aria-hidden="true">
+                  {pickerOpen ? "▲" : "▼"}
                 </span>
               </button>
 
@@ -1636,7 +1849,6 @@ function Room() {
                   aria-label="Select a problem"
                 >
                   <div className="room-picker-search-header">
-                    <span className="room-picker-search-icon">🔍</span>
                     <input
                       ref={pickerSearchInputRef}
                       type="text"
@@ -1750,24 +1962,27 @@ function Room() {
                   activeProblem.examples.length > 0 && (
                     <div className="room-problem-section">
                       <h3 className="room-problem-section-title">Examples</h3>
-                      {activeProblem.examples.map((example, idx) => (
+                      {activeProblem.examples.map((ex, idx) => (
                         <div key={idx} className="room-problem-example">
                           <div className="room-problem-example-header">
                             Example {idx + 1}
                           </div>
                           <div className="room-problem-example-body">
-                            <p>
-                              <strong>Input:</strong>{" "}
-                              <code>{example.input}</code>
-                            </p>
-                            <p>
-                              <strong>Output:</strong>{" "}
-                              <code>{example.output}</code>
-                            </p>
-                            {example.explanation && (
+                            {ex.input && (
                               <p>
-                                <strong>Explanation:</strong>{" "}
-                                {example.explanation}
+                                <strong>Input:</strong>{" "}
+                                <code>{ex.input}</code>
+                              </p>
+                            )}
+                            {ex.output && (
+                              <p>
+                                <strong>Output:</strong>{" "}
+                                <code>{ex.output}</code>
+                              </p>
+                            )}
+                            {ex.explanation && (
+                              <p>
+                                <strong>Explanation:</strong> {ex.explanation}
                               </p>
                             )}
                           </div>
@@ -1794,26 +2009,24 @@ function Room() {
               </>
             ) : isCreator ? (
               <div className="room-problem-empty-creator">
-                <div className="room-empty-icon">📂</div>
                 <h4>No Problem Selected</h4>
                 <p>
-                  Click the search bar above to choose a problem for your room.
+                  Click the problem search bar above to choose a challenge for your room.
                 </p>
                 <button
                   type="button"
                   className="room-empty-select-btn"
                   onClick={() => setPickerOpen(true)}
                 >
-                  🔍 Select Problem
+                  Select Problem
                 </button>
               </div>
             ) : (
               <div className="room-problem-empty-participant">
-                <div className="room-empty-icon">⏳</div>
                 <h4>Waiting for Problem</h4>
                 <p>
-                  Waiting for the room creator to select a problem. Once chosen,
-                  the problem and starter code will appear automatically.
+                  Waiting for the room creator to select a challenge. Once chosen,
+                  the problem statement and starter code will synchronize automatically.
                 </p>
               </div>
             )}
@@ -1855,6 +2068,26 @@ function Room() {
               </button>
               <button
                 type="button"
+                className="room-review-btn"
+                onClick={handleReviewCode}
+                disabled={isReviewing || reviewCooldown > 0 || isClosed}
+                aria-label="Review code with AI"
+                title={
+                  isClosed
+                    ? "Room is closed"
+                    : reviewCooldown > 0
+                    ? `Cooldown (${reviewCooldown}s)`
+                    : "Request static AI code review"
+                }
+              >
+                {isReviewing
+                  ? "Reviewing…"
+                  : reviewCooldown > 0
+                  ? `Review (${reviewCooldown}s)`
+                  : "Review Code"}
+              </button>
+              <button
+                type="button"
                 className="room-run-btn"
                 onClick={handleRunCode}
                 disabled={isRunning || isSubmitting || isClosed}
@@ -1889,31 +2122,55 @@ function Room() {
             />
           </div>
 
-          {/* Horizontal divider between editor and output (always visible). */}
-          <div
-            className="room-resizer room-resizer-horizontal"
-            onMouseDown={outputHeightDrag.handlePointerDown}
-            role="separator"
-            aria-orientation="horizontal"
-            aria-label="Resize output panel"
-            title="Drag to resize"
-          >
-            <span className="room-resizer-grip" aria-hidden="true" />
-          </div>
+          {/* Horizontal divider between editor and output (visible when expanded). */}
+          {!outputCollapsed && (
+            <div
+              className="room-resizer room-resizer-horizontal"
+              onMouseDown={outputHeightDrag.handlePointerDown}
+              role="separator"
+              aria-orientation="horizontal"
+              aria-label="Resize output panel"
+              title="Drag to resize"
+            >
+              <span className="room-resizer-grip" aria-hidden="true" />
+            </div>
+          )}
 
           <div
-            className="room-output-section"
-            style={{ "--room-output-height": `${layout.outputHeight}px` }}
+            className={`room-output-section${outputCollapsed ? " is-collapsed" : ""}`}
+            style={{ "--room-output-height": outputCollapsed ? "36px" : `${layout.outputHeight}px` }}
           >
             <div className="room-panel-header room-output-header">
-              <h3>Output</h3>
-              <span className="room-panel-meta">
-                {isRunning ? "Running…" : isSubmitting ? "Submitting…" : "Idle"}
-              </span>
+              <div className="room-output-header-left">
+                <h3>Output</h3>
+                {lastExecutionStatus ? (
+                  <span className={`room-output-status-tag ${lastExecutionStatus.isSuccess ? "is-success" : "is-failed"}`}>
+                    {lastExecutionStatus.meta}
+                  </span>
+                ) : (
+                  <span className="room-panel-meta">
+                    {isRunning ? "Running…" : isSubmitting ? "Submitting…" : "Idle"}
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                className="room-output-toggle-btn"
+                onClick={() => setOutputCollapsed((prev) => !prev)}
+                aria-expanded={!outputCollapsed}
+                aria-label={outputCollapsed ? "Expand output" : "Collapse output"}
+                title={outputCollapsed ? "Expand output" : "Collapse output"}
+              >
+                <span className="room-output-toggle-icon" aria-hidden="true">
+                  {outputCollapsed ? "↑" : "↓"}
+                </span>
+              </button>
             </div>
-            <div className="room-output-content">
-              <pre>{output}</pre>
-            </div>
+            {!outputCollapsed && (
+              <div className="room-output-content">
+                <pre>{output}</pre>
+              </div>
+            )}
           </div>
         </section>
       </div>
@@ -1925,9 +2182,6 @@ function Room() {
         aria-label="Room collaboration"
       >
         <div className="room-collab-left">
-          <span className="room-collab-link-icon" aria-hidden="true">
-            🔗
-          </span>
           <span className="room-collab-link-text">Room link</span>
           <button
             type="button"
@@ -1937,7 +2191,7 @@ function Room() {
             onClick={handleCopyLink}
             aria-label="Copy room link"
           >
-            {linkCopied ? "✓ Copied!" : "📋 Copy"}
+            {linkCopied ? "Copied" : "Copy Link"}
           </button>
         </div>
 
@@ -1952,7 +2206,7 @@ function Room() {
               aria-expanded={participantsOpen}
               aria-label="Toggle participants list"
             >
-              👥 {participantsCount} Participants{" "}
+              {participantsCount} Participants{" "}
               <span className="room-colbar-caret" aria-hidden="true">
                 {participantsOpen ? "▴" : "▾"}
               </span>
@@ -1985,12 +2239,6 @@ function Room() {
 
                       return (
                         <li key={uid || idx} className="room-participant-item">
-                          <span
-                            className="room-participant-avatar"
-                            aria-hidden="true"
-                          >
-                            👤
-                          </span>
                           <div className="room-participant-info">
                             <div className="room-participant-name">
                               {isSelf
@@ -2010,12 +2258,6 @@ function Room() {
                     })
                   ) : (
                     <li className="room-participant-item">
-                      <span
-                        className="room-participant-avatar"
-                        aria-hidden="true"
-                      >
-                        👤
-                      </span>
                       <div className="room-participant-info">
                         <div className="room-participant-name">You</div>
                         <div className="room-participant-status">
@@ -2042,7 +2284,7 @@ function Room() {
             aria-pressed={discussionOpen}
             aria-label="Toggle discussion drawer"
           >
-            💬 Discussion
+            Discussion
           </button>
         </div>
       </div>
@@ -2070,10 +2312,7 @@ function Room() {
           <div className="room-discussion-inner">
             <div className="room-discussion-header">
               <div className="room-discussion-header-left">
-                <span className="room-discussion-header-icon" aria-hidden="true">
-                  💬
-                </span>
-                <h3 className="room-discussion-title">Discussion</h3>
+                <h3 className="room-discussion-title">Technical Discussion</h3>
               </div>
               <button
                 type="button"
@@ -2094,34 +2333,31 @@ function Room() {
                 </div>
               ) : discussionMessages.length === 0 ? (
                 <div className="discussion-empty-placeholder">
-                  <div className="discussion-empty-icon" aria-hidden="true">
-                    💭
-                  </div>
-                  <h4 className="discussion-empty-heading">No discussion messages yet</h4>
+                  <h4 className="discussion-empty-heading">No Messages Yet</h4>
                   <p className="discussion-empty-text">
-                    Collaborative room discussions and solution ideation will appear here.
+                    Collaborative notes, algorithmic discussions, and solution ideas will appear here.
                   </p>
                   <div className="discussion-prompt-chips">
                     <button
                       type="button"
                       className="discussion-prompt-chip"
-                      onClick={() => handlePromptChipClick("💡 Let's check the constraints and edge cases.")}
+                      onClick={() => handlePromptChipClick("Let's check the constraints and edge cases.")}
                     >
-                      💡 Ask for a hint
+                      Check constraints and edge cases
                     </button>
                     <button
                       type="button"
                       className="discussion-prompt-chip"
-                      onClick={() => handlePromptChipClick("🔍 What approach should we use for this problem?")}
+                      onClick={() => handlePromptChipClick("What time/space complexity target should we aim for?")}
                     >
-                      🔍 Discuss the approach
+                      Target time and space complexity
                     </button>
                     <button
                       type="button"
                       className="discussion-prompt-chip"
-                      onClick={() => handlePromptChipClick("⚡ What are the boundary cases to test?")}
+                      onClick={() => handlePromptChipClick("What approach should we use for this problem?")}
                     >
-                      ⚡ Identify edge cases
+                      Discuss algorithmic approach
                     </button>
                   </div>
                 </div>
@@ -2171,12 +2407,12 @@ function Room() {
                   placeholder={
                     isClosed
                       ? "This room has ended. Discussion is closed."
-                      : "Write your message…"
+                      : "Write message…"
                   }
                   value={discussionInput}
                   onChange={(e) => setDiscussionInput(e.target.value)}
                   disabled={discussionSending || isClosed}
-                  aria-label="Write your message"
+                  aria-label="Write message"
                   maxLength={2000}
                 />
                 <button
@@ -2185,7 +2421,7 @@ function Room() {
                   disabled={discussionSending || !discussionInput.trim() || isClosed}
                   aria-label="Send message"
                 >
-                  {discussionSending ? "Sending…" : "Send ➤"}
+                  {discussionSending ? "Sending…" : "Send"}
                 </button>
               </div>
             </form>
@@ -2212,11 +2448,12 @@ function RoomHeader({
   return (
     <header className="dashboard-header room-header">
       <div
-        className="logo"
+        className="dashboard-brand"
         onClick={onBack}
         style={{ cursor: "pointer" }}
       >
-        <h2>CodeSync AI</h2>
+        <span className="dashboard-brand-mark">CS</span>
+        <span className="dashboard-brand-title">CodeSync AI</span>
       </div>
 
       <div className="room-header-center">

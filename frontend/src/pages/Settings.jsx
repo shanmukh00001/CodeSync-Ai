@@ -56,7 +56,7 @@ function Settings() {
           "Failed to update name";
         setNameError(message);
       }
-    } catch (err) {
+    } catch {
       setNameError("Network error. Please try again.");
     } finally {
       setNameLoading(false);
@@ -94,7 +94,7 @@ function Settings() {
           "Failed to update password";
         setPasswordError(message);
       }
-    } catch (err) {
+    } catch {
       setPasswordError("Network error. Please try again.");
     } finally {
       setPasswordLoading(false);
@@ -104,38 +104,47 @@ function Settings() {
   return (
     <div className="settings-page">
       <header className="settings-header">
-        <button type="button" onClick={() => navigate("/profile")}>
-          ← Back to Profile
+        <button
+          type="button"
+          className="settings-back-btn"
+          onClick={() => navigate("/profile")}
+        >
+          ← Profile
         </button>
-        <h1>Settings</h1>
+        <h1>Account Settings</h1>
       </header>
 
       <main className="settings-content">
         {/* ACCOUNT SECTION */}
         <section className="settings-section">
-          <h2>Account</h2>
+          <div className="settings-section-header">
+            <h2>Account Identity</h2>
+          </div>
           <div className="setting-item">
-            <div style={{ width: "100%" }}>
-              <h3>Change Name</h3>
-              <p>Your name can only be changed once.</p>
+            <div className="setting-details">
+              <h3>Display Name</h3>
+              <p>Your display name can only be modified once.</p>
               
               <form onSubmit={handleNameChange} className="settings-form">
                 {nameError && <p className="form-error-msg">{nameError}</p>}
                 {nameSuccess && <p className="form-success-msg">{nameSuccess}</p>}
-                <input 
-                  type="text" 
-                  value={newName} 
-                  onChange={(e) => setNewName(e.target.value)}
-                  disabled={user?.nameChanged || nameLoading}
-                  className="setting-input"
-                />
-                <button 
-                  type="submit" 
-                  disabled={user?.nameChanged || nameLoading}
-                  className="setting-submit-btn"
-                >
-                  {user?.nameChanged ? "Already Changed" : (nameLoading ? "Saving..." : "Change Name")}
-                </button>
+                <div className="settings-form-row">
+                  <input 
+                    type="text" 
+                    value={newName} 
+                    onChange={(e) => setNewName(e.target.value)}
+                    disabled={user?.nameChanged || nameLoading}
+                    className="setting-input"
+                    aria-label="Display Name"
+                  />
+                  <button 
+                    type="submit" 
+                    disabled={user?.nameChanged || nameLoading}
+                    className="setting-submit-btn"
+                  >
+                    {user?.nameChanged ? "Locked" : (nameLoading ? "Saving…" : "Update Name")}
+                  </button>
+                </div>
               </form>
             </div>
           </div>
@@ -143,70 +152,75 @@ function Settings() {
 
         {/* SECURITY SECTION */}
         <section className="settings-section">
-          <h2>Security</h2>
+          <div className="settings-section-header">
+            <h2>Authentication & Security</h2>
+          </div>
           <div className="setting-item">
-            <div style={{ width: "100%" }}>
+            <div className="setting-details">
               <h3>Change Password</h3>
-              <p>Update your account password securely.</p>
+              <p>Update your credentials for secure authentication.</p>
               
               <form onSubmit={handlePasswordChange} className="settings-form">
                 {passwordError && <p className="form-error-msg">{passwordError}</p>}
                 {passwordSuccess && <p className="form-success-msg">{passwordSuccess}</p>}
                 
-                <input 
-                  type="password" 
-                  placeholder="Current Password"
-                  value={currentPassword} 
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  disabled={passwordLoading}
-                  className="setting-input"
-                  required
-                />
-                <input 
-                  type="password" 
-                  placeholder="New Password"
-                  value={newPassword} 
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  disabled={passwordLoading}
-                  className="setting-input"
-                  required
-                />
-                <input 
-                  type="password" 
-                  placeholder="Confirm New Password"
-                  value={confirmPassword} 
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  disabled={passwordLoading}
-                  className="setting-input"
-                  required
-                />
+                <div className="settings-form-fields">
+                  <input 
+                    type="password" 
+                    placeholder="Current Password"
+                    value={currentPassword} 
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    disabled={passwordLoading}
+                    className="setting-input"
+                    required
+                  />
+                  <input 
+                    type="password" 
+                    placeholder="New Password (min 8 chars)"
+                    value={newPassword} 
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    disabled={passwordLoading}
+                    className="setting-input"
+                    required
+                  />
+                  <input 
+                    type="password" 
+                    placeholder="Confirm New Password"
+                    value={confirmPassword} 
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    disabled={passwordLoading}
+                    className="setting-input"
+                    required
+                  />
+                </div>
 
                 <button 
                   type="submit" 
                   disabled={passwordLoading}
                   className="setting-submit-btn"
                 >
-                  {passwordLoading ? "Saving..." : "Change Password"}
+                  {passwordLoading ? "Updating…" : "Update Password"}
                 </button>
               </form>
             </div>
           </div>
         </section>
 
-        {/* CODING PREFERENCES - FOR LATER */}
+        {/* PREFERENCES SECTION */}
         <section className="settings-section">
-          <h2>Coding Preferences</h2>
-          <div className="setting-item">
+          <div className="settings-section-header">
+            <h2>Environment Defaults</h2>
+          </div>
+          <div className="setting-item setting-item-split">
             <div>
-              <h3>Preferred Language</h3>
-              <p>Choose your preferred programming language.</p>
+              <h3>Default Language</h3>
+              <p>Preferred language syntax for problem starter code.</p>
             </div>
-            <select defaultValue="">
-              <option value="" disabled>Select language</option>
-              <option value="javascript">JavaScript</option>
-              <option value="python">Python</option>
-              <option value="java">Java</option>
-              <option value="cpp">C++</option>
+            <select defaultValue="cpp" className="setting-select">
+              <option value="cpp">C++ 20</option>
+              <option value="python">Python 3</option>
+              <option value="javascript">JavaScript (Node.js)</option>
+              <option value="java">Java 17</option>
             </select>
           </div>
         </section>

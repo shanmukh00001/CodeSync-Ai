@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import SubmissionsView from "../components/SubmissionsView";
+import AIReviewPanel from "../components/AIReviewPanel";
 import "./ProblemWorkspace.css";
 
 const LANGUAGE_OPTIONS = [
@@ -29,7 +30,7 @@ function ProblemWorkspace() {
   // Store the problem data
   const [problem, setProblem] = useState(null);
 
-  // Left panel view tab: "description" | "submissions"
+  // Left panel view tab: "description" | "submissions" | "review"
   const [activeTab, setActiveTab] = useState("description");
 
   // Language & Code per language state
@@ -45,8 +46,17 @@ function ProblemWorkspace() {
   const [output, setOutput] = useState("Run your code to see the output.");
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastExecutionSummary, setLastExecutionSummary] = useState(null);
   const [submissionHistoryVersion, setSubmissionHistoryVersion] = useState(0);
   const executionTokenRef = useRef(0);
+
+  // AI Review state
+  const [aiReview, setAiReview] = useState(null);
+  const [isReviewing, setIsReviewing] = useState(false);
+  const [aiReviewError, setAiReviewError] = useState("");
+  const [reviewCooldown, setReviewCooldown] = useState(0);
+  const reviewTokenRef = useRef(0);
+  const cooldownTimerRef = useRef(null);
 
   // Loading & Error states
   const [loading, setLoading] = useState(true);
@@ -351,6 +361,14 @@ function ProblemWorkspace() {
 
       if (response.ok && data?.result) {
         setOutput(formatExecutionResult(data.result));
+        const res = data.result;
+        setLastExecutionSummary({
+          status: res.status === "accepted" ? "Accepted" : res.status === "wrong_answer" ? "Wrong Answer" : res.status === "compilation_error" ? "Compilation Error" : res.status === "runtime_error" ? "Runtime Error" : res.status === "time_limit_exceeded" ? "Time Limit Exceeded" : "Error",
+          passedTestCases: typeof res.passedTestCases === "number" ? res.passedTestCases : 0,
+          totalTestCases: typeof res.totalTestCases === "number" ? res.totalTestCases : 0,
+          runtimeMs: typeof res.runtimeMs === "number" ? res.runtimeMs : undefined,
+          memoryKb: typeof res.memoryKb === "number" ? res.memoryKb : undefined,
+        });
       } else {
         const errorMsg =
           data?.error?.message ||
@@ -416,6 +434,14 @@ function ProblemWorkspace() {
       if (response.ok && data?.submission) {
         setOutput(formatSubmissionResult(data.submission));
         setSubmissionHistoryVersion((v) => v + 1);
+        const sub = data.submission;
+        setLastExecutionSummary({
+          status: sub.status || "Unknown",
+          passedTestCases: typeof sub.passedTestCases === "number" ? sub.passedTestCases : 0,
+          totalTestCases: typeof sub.totalTestCases === "number" ? sub.totalTestCases : 0,
+          runtimeMs: typeof sub.runtimeMs === "number" ? sub.runtimeMs : undefined,
+          memoryKb: typeof sub.memoryKb === "number" ? sub.memoryKb : undefined,
+        });
       } else {
         const errorMsg =
           data?.error?.message ||
@@ -438,6 +464,111 @@ function ProblemWorkspace() {
     } finally {
       if (executionTokenRef.current === currentToken) {
         setIsSubmitting(false);
+      }
+    }
+  };
+
+  // Cooldown timer interval cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (cooldownTimerRef.current) {
+        clearInterval(cooldownTimerRef.current);
+        cooldownTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  const handleReviewCode = async () => {
+    if (isReviewing || reviewCooldown > 0) return;
+
+    if (!problem?._id) {
+      setAiReviewError("Please wait for problem details to load before requesting a review.");
+      setActiveTab("review");
+      return;
+    }
+
+    const currentCode = (userCode[selectedLanguage] || "").trim();
+    if (!currentCode) {
+      setAiReviewError("Please write some code before requesting an AI review.");
+      setActiveTab("review");
+      return;
+    }
+
+    // Invalidate prior review requests
+    const currentToken = reviewTokenRef.current + 1;
+    reviewTokenRef.current = currentToken;
+
+    setIsReviewing(true);
+    setAiReviewError("");
+    setActiveTab("review");
+
+    // Start 5-second client-side cooldown
+    setReviewCooldown(5);
+    if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+    cooldownTimerRef.current = setInterval(() => {
+      setReviewCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(cooldownTimerRef.current);
+          cooldownTimerRef.current = null;
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    const codeSnapshot = userCode[selectedLanguage] || "";
+    const problemIdSnapshot = problem._id;
+    const languageSnapshot = selectedLanguage;
+    const executionSummarySnapshot = lastExecutionSummary || undefined;
+
+    try {
+      const response = await fetch("http://localhost:5000/api/submissions/review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          problemId: problemIdSnapshot,
+          language: languageSnapshot,
+          code: codeSnapshot,
+          lastExecutionResult: executionSummarySnapshot,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (reviewTokenRef.current !== currentToken) {
+        return;
+      }
+
+      if (response.ok && data?.review) {
+        setAiReview(data.review);
+        setAiReviewError("");
+      } else {
+        const errorMsg =
+          data?.error?.message ||
+          data?.message ||
+          (response.status === 429
+            ? "AI review rate limit reached. Please wait a minute before requesting another review."
+            : response.status === 503
+            ? "AI review is currently unavailable."
+            : response.status === 504
+            ? "AI review timed out. Please try again with a smaller code sample."
+            : response.status === 502
+            ? "AI review could not be completed. Please retry."
+            : response.status === 401
+            ? "Authentication required. Please log in again."
+            : response.status === 400
+            ? "Validation error in review request."
+            : "AI review service error. Please try again.");
+        setAiReviewError(errorMsg);
+      }
+    } catch {
+      if (reviewTokenRef.current === currentToken) {
+        setAiReviewError("Could not connect to the AI review service. Please check your connection and try again.");
+      }
+    } finally {
+      if (reviewTokenRef.current === currentToken) {
+        setIsReviewing(false);
       }
     }
   };
@@ -586,7 +717,7 @@ function ProblemWorkspace() {
               }`}
               onClick={() => setActiveTab("description")}
             >
-              📄 Description
+              Description
             </button>
             <button
               type="button"
@@ -597,7 +728,21 @@ function ProblemWorkspace() {
               }`}
               onClick={() => setActiveTab("submissions")}
             >
-              📋 Submissions
+              Submissions
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "review"}
+              className={`workspace-tab-btn ${
+                activeTab === "review" ? "is-active" : ""
+              }`}
+              onClick={() => setActiveTab("review")}
+            >
+              AI Review
+              {aiReview && !isReviewing && !aiReviewError && (
+                <span className="workspace-tab-dot" aria-label="Review available" />
+              )}
             </button>
           </div>
         </div>
@@ -607,6 +752,13 @@ function ProblemWorkspace() {
             problemId={problem._id}
             currentLanguage={selectedLanguage}
             refreshTrigger={submissionHistoryVersion}
+          />
+        ) : activeTab === "review" ? (
+          <AIReviewPanel
+            review={aiReview}
+            loading={isReviewing}
+            error={aiReviewError}
+            onClose={() => setActiveTab("description")}
           />
         ) : (
           <div className="problem-content-scroll">
@@ -711,6 +863,24 @@ function ProblemWorkspace() {
             </select>
           </div>
           <div className="toolbar-right">
+            <button
+              type="button"
+              className="btn btn-review"
+              onClick={handleReviewCode}
+              disabled={isReviewing || reviewCooldown > 0}
+              aria-label="Review Code with AI"
+              title={
+                reviewCooldown > 0
+                  ? `Cooldown (${reviewCooldown}s)`
+                  : "Request static AI code review"
+              }
+            >
+              {isReviewing
+                ? "Reviewing…"
+                : reviewCooldown > 0
+                ? `Review (${reviewCooldown}s)`
+                : "Review Code"}
+            </button>
             <button
               type="button"
               className="btn btn-run"

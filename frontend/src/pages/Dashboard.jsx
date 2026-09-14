@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
+import ActivityHeatmap from "../components/ActivityHeatmap";
 import "./Dashboard.css";
 
 const LANGUAGE_LABELS = {
@@ -14,9 +15,6 @@ const formatLanguage = (code) =>
   LANGUAGE_LABELS[code] || (code ? code.toUpperCase() : "—");
 
 function Dashboard() {
-  // Temporary problem data.
-  // Later, this can come from your backend/database.
-
   const navigate = useNavigate();
   const [problems, setProblems] = useState([]);
   const [solvedProblemIds, setSolvedProblemIds] = useState(new Set());
@@ -27,12 +25,40 @@ function Dashboard() {
   // State for difficulty filter
   const [difficulty, setDifficulty] = useState("All");
 
+  // Personal Analytics State
+  const [analytics, setAnalytics] = useState(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
+  const [analyticsError, setAnalyticsError] = useState("");
+
   const [roomMode, setRoomMode] = useState(null);
   const [roomName, setRoomName] = useState("");
   const [roomLanguage, setRoomLanguage] = useState("cpp");
   const [joinRoomId, setJoinRoomId] = useState("");
   const [roomError, setRoomError] = useState("");
   const [roomLoading, setRoomLoading] = useState(false);
+
+  // Fetch personal analytics overview
+  const fetchAnalytics = useCallback(async () => {
+    setAnalyticsLoading(true);
+    setAnalyticsError("");
+    try {
+      const response = await fetch("http://localhost:5000/api/users/analytics", {
+        credentials: "include",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.analytics) {
+          setAnalytics(data.analytics);
+        }
+      } else {
+        setAnalyticsError("Could not load analytics summary");
+      }
+    } catch {
+      setAnalyticsError("Network error loading analytics");
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  }, []);
 
   // Fetch problems and solved status
   useEffect(() => {
@@ -69,7 +95,8 @@ function Dashboard() {
     };
 
     fetchProblemsAndSolved();
-  }, []);
+    fetchAnalytics();
+  }, [fetchAnalytics]);
 
   // Close any open room modal on Escape
   useEffect(() => {
@@ -370,25 +397,162 @@ function Dashboard() {
 
       {/* ================= HEADER ================= */}
       <header className="dashboard-header">
-        <div className="logo">
-          <h2>CodeSync AI</h2>
+        <div className="dashboard-brand">
+          <span className="dashboard-brand-mark">CS</span>
+          <span className="dashboard-brand-title">CodeSync AI</span>
         </div>
 
-        <div
-              className="profile"
-              onClick={() => navigate("/profile")}
-            >
-          <span>Profile</span>
-
-          <div className="profile-avatar">
-            👤
+        <button
+          type="button"
+          className="dashboard-profile-btn"
+          onClick={() => navigate("/profile")}
+          aria-label="View user profile"
+        >
+          <span className="profile-label">Profile</span>
+          <div className="profile-avatar-chip">
+            USR
           </div>
-        </div>
+        </button>
       </header>
 
 
       {/* ================= MAIN CONTENT ================= */}
       <main className="dashboard-content">
+
+        {/* ================= ANALYTICS OVERVIEW SECTION ================= */}
+        <section className="dashboard-analytics-section" aria-label="Personal Coding Progress Overview">
+          {analyticsError && (
+            <div className="dashboard-analytics-error" role="alert">
+              <span>{analyticsError}</span>
+              <button
+                type="button"
+                className="dashboard-retry-btn"
+                onClick={fetchAnalytics}
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
+          {/* Primary Overview Metrics: Solved, Submissions, Streak */}
+          <div className="dashboard-overview-grid">
+            {/* Solved Problems Summary */}
+            <div className="dashboard-metric-card">
+              <div className="dashboard-card-header">
+                <span className="dashboard-card-title">PROBLEMS SOLVED</span>
+                <span className="dashboard-card-tag">PROGRESS</span>
+              </div>
+              <div className="dashboard-metric-main">
+                <span className="dashboard-metric-number dashboard-accent-num">
+                  {analyticsLoading ? "…" : analytics?.solved?.totalSolved ?? 0}
+                </span>
+                <span className="dashboard-metric-subtext">Total solved</span>
+              </div>
+              <div className="dashboard-diff-chips">
+                <div className="diff-chip diff-chip-easy">
+                  <span className="diff-chip-label">EASY</span>
+                  <span className="diff-chip-val">
+                    {analyticsLoading ? "…" : analytics?.solved?.easy ?? 0}
+                  </span>
+                </div>
+                <div className="diff-chip diff-chip-medium">
+                  <span className="diff-chip-label">MED</span>
+                  <span className="diff-chip-val">
+                    {analyticsLoading ? "…" : analytics?.solved?.medium ?? 0}
+                  </span>
+                </div>
+                <div className="diff-chip diff-chip-hard">
+                  <span className="diff-chip-label">HARD</span>
+                  <span className="diff-chip-val">
+                    {analyticsLoading ? "…" : analytics?.solved?.hard ?? 0}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Submissions & Acceptance Summary */}
+            <div className="dashboard-metric-card">
+              <div className="dashboard-card-header">
+                <span className="dashboard-card-title">SUBMISSIONS</span>
+                <span className="dashboard-card-tag">EVALUATION</span>
+              </div>
+              <div className="dashboard-metric-main">
+                <span className="dashboard-metric-number">
+                  {analyticsLoading ? "…" : analytics?.submissions?.total ?? 0}
+                </span>
+                <span className="dashboard-metric-subtext">Total attempts</span>
+              </div>
+              <div className="dashboard-stat-row">
+                <div className="stat-item">
+                  <span className="stat-label">ACCEPTED</span>
+                  <span className="stat-value text-accepted">
+                    {analyticsLoading ? "…" : analytics?.submissions?.accepted ?? 0}
+                  </span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">SUCCESS RATE</span>
+                  <span className="stat-value">
+                    {analyticsLoading ? "…" : `${analytics?.submissions?.acceptanceRate ?? 0}%`}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Streak & Consistency Summary */}
+            <div className="dashboard-metric-card">
+              <div className="dashboard-card-header">
+                <span className="dashboard-card-title">CODING STREAK</span>
+                <span className="dashboard-card-tag">CADENCE</span>
+              </div>
+              <div className="dashboard-metric-main">
+                <span className="dashboard-metric-number text-streak">
+                  {analyticsLoading ? "…" : `${analytics?.activity?.currentStreak ?? 0}d`}
+                </span>
+                <span className="dashboard-metric-subtext">Current streak</span>
+              </div>
+              <div className="dashboard-stat-row">
+                <div className="stat-item">
+                  <span className="stat-label">BEST STREAK</span>
+                  <span className="stat-value">
+                    {analyticsLoading ? "…" : `${analytics?.activity?.longestStreak ?? 0}d`}
+                  </span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">STATUS</span>
+                  <span className="stat-value text-status">
+                    {analyticsLoading
+                      ? "…"
+                      : (analytics?.activity?.currentStreak ?? 0) > 0
+                      ? "Active"
+                      : "Inactive"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Compact Activity Heatmap Card */}
+          <div className="dashboard-activity-panel">
+            <div className="dashboard-activity-header">
+              <div className="dashboard-activity-title-group">
+                <h3>Submission Activity</h3>
+                <span className="dashboard-activity-subtitle">Last 12 weeks cadence</span>
+              </div>
+              <button
+                type="button"
+                className="dashboard-analytics-link"
+                onClick={() => navigate("/profile")}
+                aria-label="View detailed analytics on profile"
+              >
+                Full Analytics →
+              </button>
+            </div>
+            <ActivityHeatmap
+              activity={analytics?.activity}
+              loading={analyticsLoading}
+            />
+          </div>
+        </section>
 
         {/* ================= PROBLEMS SECTION ================= */}
         <section className="problems-section">

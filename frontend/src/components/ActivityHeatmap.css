@@ -1,0 +1,142 @@
+/* =========================================================
+   CODESYNC AI — ACTIVITY HEATMAP COMPONENT
+   Developer-oriented 12-week (84-day) submission cadence
+   ========================================================= */
+
+.activity-heatmap-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.activity-heatmap-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-12);
+}
+
+.activity-grid-wrapper {
+  overflow-x: auto;
+  padding: var(--space-4) 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.activity-grid-calendar {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  min-width: 0;
+}
+
+.activity-grid-weeks {
+  display: flex;
+  gap: 5px;
+}
+
+.activity-grid-week {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.activity-day-cell {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-primary);
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+  cursor: pointer;
+  padding: 0;
+  display: block;
+}
+
+.activity-day-cell:hover,
+.activity-day-cell:focus-visible {
+  border-color: var(--accent-primary);
+  transform: scale(1.15);
+  outline: none;
+  z-index: 2;
+}
+
+/* Deterministic Activity Intensity Thresholds */
+.intensity-0 {
+  background-color: var(--bg-surface);
+  border-color: var(--border-subtle);
+}
+
+.intensity-1 {
+  background-color: rgba(242, 140, 40, 0.25);
+  border-color: rgba(242, 140, 40, 0.4);
+}
+
+.intensity-2 {
+  background-color: rgba(242, 140, 40, 0.5);
+  border-color: rgba(242, 140, 40, 0.65);
+}
+
+.intensity-3 {
+  background-color: rgba(242, 140, 40, 0.8);
+  border-color: var(--accent-primary);
+}
+
+.intensity-4 {
+  background-color: #ff9f3d;
+  border-color: #ffffff;
+}
+
+/* Activity Legend & Footer */
+.activity-heatmap-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--border-subtle);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.activity-window-label {
+  font-family: var(--font-mono);
+}
+
+.activity-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+}
+
+.activity-legend-cells {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.activity-legend-cell {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid var(--border-subtle);
+}
+
+.activity-empty-state {
+  padding: var(--space-20);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .activity-heatmap-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .activity-day-cell {
+    width: 12px;
+    height: 12px;
+  }
+}

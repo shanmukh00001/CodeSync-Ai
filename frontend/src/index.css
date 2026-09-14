@@ -1,40 +1,111 @@
-:root {
-  --bg-main: #0f172a;
-  --bg-panel: #1e293b;
-  --bg-surface: #0b1120;
-  --border-color: #334155;
-  --border-subtle: #1e293b;
-  
-  --text-main: #f8fafc;
-  --text-sub: #cbd5e1;
-  --text-muted: #94a3b8;
-  
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --accent-cyan: #38bdf8;
-  
-  --easy: #4ade80;
-  --medium: #facc15;
-  --hard: #f87171;
+/* =========================================================
+   CODESYNC AI — GLOBAL DESIGN SYSTEM TOKENS & RESET
+   Industrial Slate + Safety Orange Brand Palette
+   Strict 4px/8px Spatial Cadence & IBM Plex Typography
+   ========================================================= */
 
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-  --mono: "Fira Code", "Cascadia Code", Consolas, "Courier New", monospace;
-  
+:root {
+  /* Color System — Surfaces & Atmosphere */
+  --bg-primary: #0b0f12;
+  --bg-surface: #13181d;
+  --bg-elevated: #1a2127;
+  --bg-subtle: #212b33;
+  --bg-highlight: #28343e;
+
+  /* Color System — Borders */
+  --border-subtle: #1e262d;
+  --border-default: #2a343d;
+  --border-strong: #3b4854;
+  --border-focus: #f28c28;
+
+  /* Color System — Text & Content (WCAG AA compliant) */
+  --text-primary: #f3f5f7;
+  --text-secondary: #9da8b2;
+  --text-muted: #6b7782;
+  --text-inverse: #0b0f12;
+
+  /* Color System — Brand Accent (Warm Orange) */
+  --accent-primary: #f28c28;
+  --accent-hover: #ff9f3d;
+  --accent-active: #de7b1a;
+  --accent-subtle: rgba(242, 140, 40, 0.12);
+  --accent-border: rgba(242, 140, 40, 0.35);
+
+  /* Semantic Evaluation Statuses */
+  --status-accepted: #34d399;
+  --status-accepted-bg: rgba(52, 211, 153, 0.12);
+  --status-accepted-border: rgba(52, 211, 153, 0.3);
+
+  --status-wrong: #f87171;
+  --status-wrong-bg: rgba(248, 113, 113, 0.12);
+  --status-wrong-border: rgba(248, 113, 113, 0.3);
+
+  --status-warning: #fbbf24;
+  --status-warning-bg: rgba(251, 191, 36, 0.12);
+  --status-warning-border: rgba(251, 191, 36, 0.3);
+
+  --status-info: #38bdf8;
+  --status-info-bg: rgba(56, 189, 248, 0.12);
+  --status-info-border: rgba(56, 189, 248, 0.3);
+
+  /* Problem Difficulties */
+  --diff-easy: #34d399;
+  --diff-easy-bg: rgba(52, 211, 153, 0.1);
+  --diff-easy-border: rgba(52, 211, 153, 0.25);
+
+  --diff-medium: #fbbf24;
+  --diff-medium-bg: rgba(251, 191, 36, 0.1);
+  --diff-medium-border: rgba(251, 191, 36, 0.25);
+
+  --diff-hard: #f87171;
+  --diff-hard-bg: rgba(248, 113, 113, 0.1);
+  --diff-hard-border: rgba(248, 113, 113, 0.25);
+
+  /* Typography */
+  --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+
+  /* Spacing Grid */
+  --space-2: 2px;
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-40: 40px;
+  --space-48: 48px;
+  --space-64: 64px;
+
+  /* Border Radii (Disciplined, non-pill) */
+  --radius-xs: 3px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+
+  /* Transitions (Snappy and physical) */
+  --transition-fast: 0.12s ease;
+  --transition-normal: 0.18s ease;
+
   color-scheme: dark;
 }
 
-* {
+/* Global Reset */
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-body {
-  margin: 0;
-  padding: 0;
-  background-color: var(--bg-main);
-  color: var(--text-main);
-  font-family: var(--sans);
+html, body {
+  min-height: 100%;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -46,21 +117,102 @@ body {
   flex-direction: column;
 }
 
-/* Custom scrollbars */
+/* Typography Defaults */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
+p {
+  color: var(--text-secondary);
+}
+
+a {
+  color: var(--accent-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+code, pre, kbd, samp {
+  font-family: var(--font-mono);
+}
+
+/* Focus Rings */
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Scrollbars */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-main);
+  background: var(--bg-primary);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
+  background: var(--border-default);
+  border-radius: var(--radius-xs);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: var(--border-strong);
+}
+
+/* Common UI Utility Classes */
+.badge-easy {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background-color: var(--diff-easy-bg);
+  border: 1px solid var(--diff-easy-border);
+  color: var(--diff-easy);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.badge-medium {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background-color: var(--diff-medium-bg);
+  border: 1px solid var(--diff-medium-border);
+  color: var(--diff-medium);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.badge-hard {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background-color: var(--diff-hard-bg);
+  border: 1px solid var(--diff-hard-border);
+  color: var(--diff-hard);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* Base Form Control Tokens */
+input, select, textarea, button {
+  font-family: inherit;
+  font-size: inherit;
 }

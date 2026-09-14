@@ -1,0 +1,428 @@
+/* =========================================================
+   CODESYNC AI — AI CODE REVIEW PANEL STYLES
+   Industrial Slate & Warm Orange Theme (Disciplined & Solid)
+   ========================================================= */
+
+.ai-review-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  overflow: hidden;
+  border-left: 1px solid var(--border-default);
+}
+
+.ai-review-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px var(--space-16);
+  background-color: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-default);
+  height: 44px;
+  flex-shrink: 0;
+}
+
+.ai-review-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.ai-review-badge {
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  background-color: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
+  color: var(--accent-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.ai-review-advisory-tag {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.ai-review-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-xs);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.ai-review-close-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-subtle);
+}
+
+.ai-review-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+/* Loading State */
+.ai-review-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+  padding: var(--space-20);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+}
+
+.ai-review-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  animation: ai-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes ai-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ai-review-loading-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ai-review-loading-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ai-review-loading-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Error State */
+.ai-review-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  padding: var(--space-16);
+  background-color: var(--status-wrong-bg);
+  border: 1px solid var(--status-wrong-border);
+  border-radius: var(--radius-sm);
+  color: var(--status-wrong);
+}
+
+.ai-review-error-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--status-wrong);
+  color: var(--bg-primary);
+  font-weight: 700;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.ai-review-error-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.ai-review-error-title {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ai-review-error-message {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+/* Content Sections */
+.ai-review-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+.ai-review-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.ai-review-section-title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ai-review-summary-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  padding: var(--space-12) var(--space-14);
+  border-radius: var(--radius-sm);
+}
+
+/* Complexity Grid */
+.ai-review-complexity-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-8);
+}
+
+.ai-review-metric-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-10) var(--space-12);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+}
+
+.ai-review-metric-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.ai-review-metric-value {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+
+.ai-review-complexity-desc {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.ai-review-alignment-box {
+  padding: var(--space-8) var(--space-12);
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.ai-review-alignment-label {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.ai-review-alignment-value {
+  color: var(--text-primary);
+}
+
+/* Issues List */
+.ai-review-issues-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+}
+
+.ai-review-issue-card {
+  padding: var(--space-12) var(--space-14);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  border-left-width: 3px;
+}
+
+.ai-review-issue-card.severity-critical,
+.ai-review-issue-card.severity-high {
+  border-left-color: var(--status-wrong);
+}
+
+.ai-review-issue-card.severity-medium {
+  border-left-color: var(--status-warning);
+}
+
+.ai-review-issue-card.severity-low {
+  border-left-color: var(--status-info);
+}
+
+.ai-review-issue-card.severity-info {
+  border-left-color: var(--border-strong);
+}
+
+.ai-review-issue-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ai-review-issue-badges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.ai-review-sev-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+  letter-spacing: 0.03em;
+}
+
+.ai-review-sev-tag.sev-critical,
+.ai-review-sev-tag.sev-high {
+  background-color: var(--status-wrong-bg);
+  border: 1px solid var(--status-wrong-border);
+  color: var(--status-wrong);
+}
+
+.ai-review-sev-tag.sev-medium {
+  background-color: var(--status-warning-bg);
+  border: 1px solid var(--status-warning-border);
+  color: var(--status-warning);
+}
+
+.ai-review-sev-tag.sev-low {
+  background-color: var(--status-info-bg);
+  border: 1px solid var(--status-info-border);
+  color: var(--status-info);
+}
+
+.ai-review-sev-tag.sev-info {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  color: var(--text-muted);
+}
+
+.ai-review-cat-tag,
+.ai-review-line-tag {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.ai-review-issue-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.ai-review-issue-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ai-review-detail-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.ai-review-detail-text {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.ai-review-detail-text.recommendation {
+  color: var(--text-primary);
+  background-color: var(--bg-elevated);
+  padding: var(--space-6) var(--space-10);
+  border-radius: var(--radius-xs);
+  border-left: 2px solid var(--accent-primary);
+}
+
+.ai-review-empty-state {
+  padding: var(--space-16);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+/* Bullets List (Strengths & Suggestions) */
+.ai-review-bullets-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.ai-review-bullet-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-12);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.ai-review-bullet-marker {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.ai-review-bullet-item.strength .ai-review-bullet-marker {
+  color: var(--status-accepted);
+}
+
+.ai-review-bullet-item.suggestion .ai-review-bullet-marker {
+  color: var(--accent-primary);
+}

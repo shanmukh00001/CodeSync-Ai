@@ -298,6 +298,21 @@ router.get("/solved-problems", protect, async (req, res, next) => {
     }
 });
 
+const { getUserAnalytics } = require("../services/analyticsService");
+
+// GET /api/users/analytics - returns the authenticated user's personal analytics
+router.get("/analytics", protect, async (req, res, next) => {
+    try {
+        const analytics = await getUserAnalytics(req.userId);
+        res.status(200).json({
+            success: true,
+            analytics,
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
 //profile route
 router.get("/profile", protect, async (req, res, next) => {
     try {
