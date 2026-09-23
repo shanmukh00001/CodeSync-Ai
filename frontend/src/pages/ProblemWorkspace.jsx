@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import SubmissionsView from "../components/SubmissionsView";
 import AIReviewPanel from "../components/AIReviewPanel";
+import AIHintPanel from "../components/AIHintPanel";
+import MonacoCodeEditor from "../components/MonacoCodeEditor";
 import "./ProblemWorkspace.css";
 
 const LANGUAGE_OPTIONS = [
@@ -30,7 +32,7 @@ function ProblemWorkspace() {
   // Store the problem data
   const [problem, setProblem] = useState(null);
 
-  // Left panel view tab: "description" | "submissions" | "review"
+  // Left panel view tab: "description" | "submissions" | "review" | "hint"
   const [activeTab, setActiveTab] = useState("description");
 
   // Language & Code per language state
@@ -44,6 +46,8 @@ function ProblemWorkspace() {
 
   // Output panel state & execution
   const [output, setOutput] = useState("Run your code to see the output.");
+  const [isOutputCollapsed, setIsOutputCollapsed] = useState(false);
+  const [saveFeedback, setSaveFeedback] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastExecutionSummary, setLastExecutionSummary] = useState(null);
@@ -57,6 +61,15 @@ function ProblemWorkspace() {
   const [reviewCooldown, setReviewCooldown] = useState(0);
   const reviewTokenRef = useRef(0);
   const cooldownTimerRef = useRef(null);
+
+  // AI Hint state
+  const [aiHint, setAiHint] = useState(null);
+  const [isHintLoading, setIsHintLoading] = useState(false);
+  const [aiHintError, setAiHintError] = useState("");
+  const [hintCooldown, setHintCooldown] = useState(0);
+  const hintTokenRef = useRef(0);
+  const hintCooldownTimerRef = useRef(null);
+
 
   // Loading & Error states
   const [loading, setLoading] = useState(true);
@@ -111,10 +124,19 @@ function ProblemWorkspace() {
         const fetchedProblem = data.problem;
         setProblem(fetchedProblem);
 
-        // Invalidate execution token on problem change
+        // Invalidate execution, review, and hint tokens on problem change
         executionTokenRef.current += 1;
+        reviewTokenRef.current += 1;
+        hintTokenRef.current += 1;
         setIsRunning(false);
         setIsSubmitting(false);
+        setIsReviewing(false);
+        setIsHintLoading(false);
+        setAiReview(null);
+        setAiReviewError("");
+        setAiHint(null);
+        setAiHintError("");
+        setActiveTab("description");
 
         // Parse starter code
         let initialCodeMap = {
@@ -134,6 +156,16 @@ function ProblemWorkspace() {
             };
           } else if (typeof fetchedProblem.starterCode === "string") {
             initialCodeMap.javascript = fetchedProblem.starterCode;
+          }
+        }
+
+        // Check for saved local drafts per language for this problem
+        const problemKey = fetchedProblem.slug || fetchedProblem._id || slug;
+        const languages = ["javascript", "python", "java", "cpp"];
+        for (const lang of languages) {
+          const savedDraft = localStorage.getItem(`codesync:solo_code_${problemKey}_${lang}`);
+          if (savedDraft !== null && savedDraft.trim() !== "") {
+            initialCodeMap[lang] = savedDraft;
           }
         }
 
@@ -169,13 +201,55 @@ function ProblemWorkspace() {
     setSelectedLanguage(e.target.value);
   };
 
-  const handleCodeChange = (e) => {
-    const value = e.target.value;
+  const handleCodeChange = (newVal) => {
+    const value = typeof newVal === "string" ? newVal : newVal?.target?.value ?? "";
     setUserCode((prev) => ({
       ...prev,
       [selectedLanguage]: value,
     }));
+    // Auto-save local draft
+    if (problem) {
+      const problemKey = problem.slug || problem._id || slug;
+      localStorage.setItem(`codesync:solo_code_${problemKey}_${selectedLanguage}`, value);
+    }
   };
+
+  const handleResetCode = () => {
+    if (!problem) return;
+    if (window.confirm(`Reset ${selectedLanguage.toUpperCase()} code to default starter template? Current edits will be overwritten.`)) {
+      let defaultCode = "";
+      if (problem.starterCode) {
+        if (typeof problem.starterCode === "object") {
+          defaultCode = problem.starterCode[selectedLanguage] || "";
+        } else if (typeof problem.starterCode === "string" && selectedLanguage === "javascript") {
+          defaultCode = problem.starterCode;
+        }
+      }
+      handleCodeChange(defaultCode);
+    }
+  };
+
+  const handleSaveCode = useCallback(() => {
+    if (problem) {
+      const problemKey = problem.slug || problem._id || slug;
+      const currentCode = userCode[selectedLanguage] || "";
+      localStorage.setItem(`codesync:solo_code_${problemKey}_${selectedLanguage}`, currentCode);
+      setSaveFeedback(true);
+      setTimeout(() => setSaveFeedback(false), 2000);
+    }
+  }, [problem, slug, selectedLanguage, userCode]);
+
+  // Window-level Ctrl+S / Cmd+S shortcut to save draft
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        handleSaveCode();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleSaveCode]);
 
   const formatExecutionResult = (res) => {
     if (!res) return "No execution result returned.";
@@ -475,8 +549,102 @@ function ProblemWorkspace() {
         clearInterval(cooldownTimerRef.current);
         cooldownTimerRef.current = null;
       }
+      if (hintCooldownTimerRef.current) {
+        clearInterval(hintCooldownTimerRef.current);
+        hintCooldownTimerRef.current = null;
+      }
     };
   }, []);
+
+  const handleGetHint = async () => {
+    if (isHintLoading || hintCooldown > 0) return;
+
+    if (!problem?._id) {
+      setAiHintError("Please wait for problem details to load before requesting a hint.");
+      setActiveTab("hint");
+      return;
+    }
+
+    const currentCode = userCode[selectedLanguage] || "";
+
+    // Invalidate prior hint requests
+    const currentToken = hintTokenRef.current + 1;
+    hintTokenRef.current = currentToken;
+
+    setIsHintLoading(true);
+    setAiHintError("");
+    setActiveTab("hint");
+
+    // Start 5-second client-side cooldown
+    setHintCooldown(5);
+    if (hintCooldownTimerRef.current) clearInterval(hintCooldownTimerRef.current);
+    hintCooldownTimerRef.current = setInterval(() => {
+      setHintCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(hintCooldownTimerRef.current);
+          hintCooldownTimerRef.current = null;
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    const codeSnapshot = currentCode;
+    const problemIdSnapshot = problem._id;
+    const languageSnapshot = selectedLanguage;
+    const executionSummarySnapshot = lastExecutionSummary || undefined;
+
+    try {
+      const response = await fetch("http://localhost:5000/api/submissions/hint", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          problemId: problemIdSnapshot,
+          language: languageSnapshot,
+          code: codeSnapshot,
+          lastExecutionResult: executionSummarySnapshot,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (hintTokenRef.current !== currentToken) {
+        return;
+      }
+
+      if (response.ok && data?.hint) {
+        setAiHint(data.hint);
+        setAiHintError("");
+      } else {
+        const errorMsg =
+          data?.error?.message ||
+          data?.message ||
+          (response.status === 429
+            ? "AI hint rate limit reached. Please wait a minute before requesting another hint."
+            : response.status === 503
+            ? "AI hint service is temporarily unavailable."
+            : response.status === 504
+            ? "AI hint request timed out. Please try again."
+            : response.status === 502
+            ? "AI hint could not be generated. Please try again."
+            : response.status === 401
+            ? "Authentication required. Please log in again."
+            : response.status === 400
+            ? "Validation error in hint request."
+            : "AI hint service error. Please try again.");
+        setAiHintError(errorMsg);
+      }
+    } catch {
+      if (hintTokenRef.current === currentToken) {
+        setAiHintError("Could not connect to the AI hint service. Please check your connection and try again.");
+      }
+    } finally {
+      if (hintTokenRef.current === currentToken) {
+        setIsHintLoading(false);
+      }
+    }
+  };
 
   const handleReviewCode = async () => {
     if (isReviewing || reviewCooldown > 0) return;
@@ -572,6 +740,7 @@ function ProblemWorkspace() {
       }
     }
   };
+
 
   // ================= RESIZABLE PANELS =================
   // Shared pointermove handler used while a resize drag is active.
@@ -702,10 +871,10 @@ function ProblemWorkspace() {
             type="button"
             className="workspace-back-btn"
             onClick={() => navigate("/dashboard")}
-            aria-label="Back to Dashboard"
-            title="Back to Dashboard"
+            aria-label="Back to Problems"
+            title="Back to Problems"
           >
-            ←
+            ← Problems
           </button>
           <div className="workspace-nav-tabs" role="tablist">
             <button
@@ -744,6 +913,20 @@ function ProblemWorkspace() {
                 <span className="workspace-tab-dot" aria-label="Review available" />
               )}
             </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "hint"}
+              className={`workspace-tab-btn ${
+                activeTab === "hint" ? "is-active" : ""
+              }`}
+              onClick={() => setActiveTab("hint")}
+            >
+              AI Hint
+              {aiHint && !isHintLoading && !aiHintError && (
+                <span className="workspace-tab-dot" aria-label="Hint available" />
+              )}
+            </button>
           </div>
         </div>
 
@@ -759,6 +942,15 @@ function ProblemWorkspace() {
             loading={isReviewing}
             error={aiReviewError}
             onClose={() => setActiveTab("description")}
+            onRequestReview={handleReviewCode}
+          />
+        ) : activeTab === "hint" ? (
+          <AIHintPanel
+            hint={aiHint}
+            loading={isHintLoading}
+            error={aiHintError}
+            onClose={() => setActiveTab("description")}
+            onRequestHint={handleGetHint}
           />
         ) : (
           <div className="problem-content-scroll">
@@ -823,6 +1015,13 @@ function ProblemWorkspace() {
                 </div>
               </div>
             )}
+
+            <div className="problem-identifier-footer">
+              <span className="problem-id-label">Problem ID</span>
+              <span className="problem-id-value">
+                {problem.slug ? problem.slug.toUpperCase() : "CHALLENGE"}
+              </span>
+            </div>
           </div>
         )}
       </section>
@@ -865,6 +1064,33 @@ function ProblemWorkspace() {
           <div className="toolbar-right">
             <button
               type="button"
+              className="btn btn-save"
+              onClick={handleSaveCode}
+              aria-label="Save code draft locally (Ctrl+S)"
+              title="Save current draft locally (Ctrl+S)"
+            >
+              {saveFeedback ? "Saved ✓" : "Save"}
+            </button>
+            <button
+              type="button"
+              className="btn btn-hint"
+              onClick={handleGetHint}
+              disabled={isHintLoading || hintCooldown > 0}
+              aria-label="Get Socratic AI Hint"
+              title={
+                hintCooldown > 0
+                  ? `Cooldown (${hintCooldown}s)`
+                  : "Get Socratic algorithmic guidance"
+              }
+            >
+              {isHintLoading
+                ? "Getting Hint…"
+                : hintCooldown > 0
+                ? `Hint (${hintCooldown}s)`
+                : "Get Hint"}
+            </button>
+            <button
+              type="button"
               className="btn btn-review"
               onClick={handleReviewCode}
               disabled={isReviewing || reviewCooldown > 0}
@@ -886,6 +1112,8 @@ function ProblemWorkspace() {
               className="btn btn-run"
               onClick={handleRunCode}
               disabled={isRunning || isSubmitting}
+              aria-label="Run code on visible test cases (Ctrl+Enter)"
+              title="Run code on visible test cases (Ctrl+Enter)"
             >
               {isRunning ? "Running…" : "Run Code"}
             </button>
@@ -894,6 +1122,8 @@ function ProblemWorkspace() {
               className="btn btn-submit"
               onClick={handleSubmit}
               disabled={isRunning || isSubmitting}
+              aria-label="Submit solution (Ctrl+Shift+Enter)"
+              title="Submit solution (Ctrl+Shift+Enter)"
             >
               {isSubmitting ? "Submitting…" : "Submit"}
             </button>
@@ -901,37 +1131,56 @@ function ProblemWorkspace() {
         </div>
 
         <div className="editor-container">
-          <textarea
+          <MonacoCodeEditor
             value={userCode[selectedLanguage] || ""}
             onChange={handleCodeChange}
-            className="code-editor"
-            placeholder="Write your solution here..."
-            spellCheck="false"
+            language={selectedLanguage}
+            onRunCode={handleRunCode}
+            onSubmitCode={handleSubmit}
+            onSave={handleSaveCode}
+            onReset={handleResetCode}
+            showLangBadge={false}
+            placeholder={`Write your ${selectedLanguage.toUpperCase()} solution here...`}
+            showToolbar={true}
           />
         </div>
 
         {/* ================= RESIZABLE PANELS ================= */}
-        {/* Horizontal drag handle between editor and output panels. */}
-        <div
-          className="resize-handle resize-handle-horizontal"
-          role="separator"
-          aria-orientation="vertical"
-          aria-label="Resize editor and output panels"
-          onPointerDown={startHorizontalDrag}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-        >
-          <span className="resize-handle-grip" />
-        </div>
+        {/* Horizontal drag handle between editor and output panels (visible only when expanded). */}
+        {!isOutputCollapsed && (
+          <div
+            className="resize-handle resize-handle-horizontal"
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize editor and output panels"
+            onPointerDown={startHorizontalDrag}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+          >
+            <span className="resize-handle-grip" />
+          </div>
+        )}
 
-        <div className="output-panel">
+        <div className={`output-panel ${isOutputCollapsed ? "is-collapsed" : ""}`}>
           <div className="output-header">
-            <span>Output</span>
+            <span className="output-title">OUTPUT</span>
+            <button
+              type="button"
+              className="output-toggle-btn"
+              onClick={() => setIsOutputCollapsed((prev) => !prev)}
+              aria-expanded={!isOutputCollapsed}
+              aria-label={isOutputCollapsed ? "Expand output panel" : "Collapse output panel"}
+              title={isOutputCollapsed ? "Expand output panel" : "Collapse output panel"}
+            >
+              {isOutputCollapsed ? "[Expand]" : "[Collapse]"}
+            </button>
           </div>
-          <div className="output-content">
-            <pre>{output}</pre>
-          </div>
+          {!isOutputCollapsed && (
+            <div className="output-content">
+              <pre>{output}</pre>
+            </div>
+          )}
         </div>
       </section>
     </div>

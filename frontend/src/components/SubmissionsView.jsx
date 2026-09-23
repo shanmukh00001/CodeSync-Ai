@@ -204,7 +204,10 @@ function SubmissionsView({ problemId, currentLanguage, refreshTrigger }) {
 
                   {/* Expandable details section */}
                   {isSelected && (
-                    <div className="submission-details-drawer">
+                    <div
+                      className="submission-details-drawer"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       {hasVisibleFailedCase && (
                         <div className="submission-failed-case">
                           <div className="submission-failed-title">
@@ -254,8 +257,21 @@ function SubmissionsView({ problemId, currentLanguage, refreshTrigger }) {
 
                       {sub.code && (
                         <div className="submission-code-preview">
-                          <div className="submission-code-header">
-                            Submitted Source:
+                          <div className="submission-code-header-row">
+                            <span className="submission-code-header">
+                              Submitted Source ({formatLanguage(sub.language)}):
+                            </span>
+                            <button
+                              type="button"
+                              className="submission-copy-code-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(sub.code);
+                              }}
+                              title="Copy submitted code to clipboard"
+                            >
+                              Copy Code
+                            </button>
                           </div>
                           <pre className="submission-code-block">
                             {sub.code}

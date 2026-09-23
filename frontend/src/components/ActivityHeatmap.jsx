@@ -89,6 +89,9 @@ function ActivityHeatmap({ activity, loading }) {
     };
   }, [activityByDay]);
 
+  // Weekday abbreviation indicators for the 7 rows
+  const weekdayLabels = ["", "Mon", "", "Wed", "", "Fri", ""];
+
   return (
     <div className="activity-heatmap-container">
       {/* Streak Summary Metrics */}
@@ -120,26 +123,38 @@ function ActivityHeatmap({ activity, loading }) {
       ) : (
         <div className="activity-grid-wrapper" tabIndex={0} aria-label="Activity heatmap over the last 12 weeks">
           <div className="activity-grid-calendar">
-            <div className="activity-grid-weeks">
-              {weeks.map((week, wIdx) => (
-                <div key={wIdx} className="activity-grid-week">
-                  {week.map((day) => {
-                    const submissionText =
-                      day.count === 1 ? "1 submission" : `${day.count} submissions`;
-                    const label = `${day.formattedDate}: ${submissionText}`;
+            <div className="activity-grid-with-labels">
+              {/* Day of week labels */}
+              <div className="activity-weekday-labels" aria-hidden="true">
+                {weekdayLabels.map((lbl, idx) => (
+                  <span key={idx} className="activity-weekday-label">
+                    {lbl}
+                  </span>
+                ))}
+              </div>
 
-                    return (
-                      <button
-                        key={day.date}
-                        type="button"
-                        className={`activity-day-cell intensity-${day.intensity}`}
-                        title={label}
-                        aria-label={label}
-                      />
-                    );
-                  })}
-                </div>
-              ))}
+              {/* 12-Week Grid Columns */}
+              <div className="activity-grid-weeks">
+                {weeks.map((week, wIdx) => (
+                  <div key={wIdx} className="activity-grid-week">
+                    {week.map((day) => {
+                      const submissionText =
+                        day.count === 1 ? "1 submission" : `${day.count} submissions`;
+                      const label = `${day.formattedDate}: ${submissionText}`;
+
+                      return (
+                        <button
+                          key={day.date}
+                          type="button"
+                          className={`activity-day-cell intensity-${day.intensity}`}
+                          title={label}
+                          aria-label={label}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Footer with window details and accessible intensity legend */}

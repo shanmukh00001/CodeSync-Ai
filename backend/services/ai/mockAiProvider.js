@@ -82,6 +82,80 @@ class MockAiProvider extends AIProvider {
       ],
     };
   }
+
+  async generateHint(input) {
+    this.callCount += 1;
+    this.lastInput = input;
+
+    if (this.mode === "error") {
+      throw this.customError || new Error("Simulated AI provider failure");
+    }
+
+    if (this.mode === "unavailable") {
+      const err = new Error("Provider service unavailable");
+      err.code = "SERVICE_UNAVAILABLE";
+      throw err;
+    }
+
+    if (this.mode === "malformed") {
+      return this.customResponse || {
+        invalidHintKey: "broken output",
+      };
+    }
+
+    if (this.customResponse) {
+      return this.customResponse;
+    }
+
+    // Default valid deterministic response matching Stage 10 contract
+    return {
+      hintLevel: "targeted",
+      concept: "Hash Map Complement Lookup",
+      observation: `In this ${input.language || "cpp"} implementation, iterating repeatedly through the data introduces quadratic overhead.`,
+      suggestedStep: "Maintain a frequency or index map while traversing elements in a single pass to check for target complements in O(1) time.",
+      pitfallToAvoid: "Ensure the current element at index i is not paired with itself.",
+      questionToConsider: "What data structure allows checking prior occurrences in constant time?",
+    };
+  }
+
+  async generateRecommendations(input) {
+    this.callCount += 1;
+    this.lastInput = input;
+
+    if (this.mode === "error") {
+      throw this.customError || new Error("Simulated AI provider failure");
+    }
+
+    if (this.mode === "unavailable") {
+      const err = new Error("Provider service unavailable");
+      err.code = "SERVICE_UNAVAILABLE";
+      throw err;
+    }
+
+    if (this.mode === "malformed") {
+      return this.customResponse || {
+        invalidRecKey: "broken output",
+      };
+    }
+
+    if (this.customResponse) {
+      return this.customResponse;
+    }
+
+    const candidates = Array.isArray(input.candidateProblems) ? input.candidateProblems : [];
+    const recommendations = candidates.slice(0, 3).map((p) => ({
+      problemId: p.id,
+      reason: `Strengthens your understanding of ${(p.tags && p.tags[0]) || p.difficulty} algorithmic patterns.`,
+      focus: `Mastering ${(p.tags && p.tags[0]) || p.difficulty} techniques and edge case handling.`,
+      nextStep: "Identify the problem constraints and design your initial data structure.",
+      matchType: p.defaultMatchType || "Skill Progression",
+    }));
+
+    return {
+      recommendations,
+    };
+  }
 }
 
 module.exports = MockAiProvider;
+

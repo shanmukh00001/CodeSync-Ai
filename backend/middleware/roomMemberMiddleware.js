@@ -7,7 +7,9 @@ const checkRoomMember = async (req, res, next) => {
         const { roomId } = req.params;
 
         // Find the room
-        const room = await Room.findOne({ roomId }).populate("selectedProblem");
+        const room = await Room.findOne({ roomId })
+            .populate("selectedProblem")
+            .populate("users", "name email");
 
         // Check if the room exists
         if (!room) {
@@ -18,7 +20,7 @@ const checkRoomMember = async (req, res, next) => {
 
         // Check if the logged-in user is a member of the room
         const isMember = room.users.some(
-            (userId) => userId.toString() === req.userId.toString()
+            (u) => (u?._id ? u._id.toString() : u.toString()) === req.userId.toString()
         );
 
         if (!isMember) {

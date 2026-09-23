@@ -12,7 +12,33 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true
+        required: function() {
+            return this.authProvider === 'local';
+        }
+    },
+    role: {
+        type: String,
+        enum: ["user", "admin", "superadmin"],
+        default: "user"
+    },
+    isEmailVerified: {
+        type: Boolean,
+        default: false
+    },
+    authProvider: {
+        type: String,
+        enum: ["local", "google"],
+        default: "local"
+    },
+    googleId: {
+        type: String,
+        default: null
+    },
+    otpSecret: {
+        codeHash: { type: String },
+        expiresAt: { type: Date },
+        purpose: { type: String, enum: ["verification", "login", "reset_password"] },
+        attempts: { type: Number, default: 0 }
     },
     activeRoom: {
         type: String,

@@ -1,0 +1,179 @@
+.monaco-editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  background-color: var(--bg-primary);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.monaco-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 14px;
+  height: 38px;
+  min-height: 38px;
+  max-height: 38px;
+  flex: 0 0 38px;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 11px;
+  user-select: none;
+  gap: 8px;
+  flex-wrap: nowrap;
+  box-sizing: border-box;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.monaco-toolbar::-webkit-scrollbar {
+  display: none;
+}
+
+.monaco-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.monaco-lang-badge {
+  font-weight: 700;
+  font-size: 10.5px;
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  background: var(--growth-emerald-bg);
+  border: 1px solid var(--growth-emerald-border);
+  color: var(--growth-emerald);
+  letter-spacing: 0.05em;
+  font-family: var(--font-mono);
+}
+
+.monaco-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.monaco-select {
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  padding: 2px 8px;
+  height: 26px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.monaco-select:hover {
+  border-color: var(--border-strong);
+  background-color: var(--bg-subtle);
+}
+
+.monaco-select:focus {
+  border-color: var(--accent-primary);
+}
+
+.monaco-btn-icon {
+  background-color: var(--bg-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  padding: 0 10px;
+  height: 26px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.monaco-btn-icon:hover {
+  background-color: var(--bg-subtle);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.monaco-btn-icon.is-active {
+  background-color: var(--accent-primary);
+  color: var(--text-inverse);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.3);
+}
+
+.monaco-btn-icon.monaco-btn-danger:hover {
+  background-color: var(--status-wrong-bg);
+  color: var(--status-wrong);
+  border-color: var(--status-wrong-border);
+}
+
+.monaco-editor-wrapper {
+  flex: 1 1 0;
+  width: 100%;
+  height: calc(100% - 36px);
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.monaco-editor-wrapper > section {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+.monaco-loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #8b949e;
+  font-size: 13px;
+  gap: 10px;
+}
+
+.spinner-dot {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #388bfd;
+  border-radius: 50%;
+  animation: monaco-spin 0.8s linear infinite;
+}
+
+@keyframes monaco-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Remote Cursor Decorations (Multiplayer) */
+.remote-cursor-line {
+  background-color: rgba(56, 139, 253, 0.2) !important;
+  border-left: 2px solid #388bfd !important;
+}
+
+.remote-cursor-badge {
+  font-size: 10px;
+  background: #1f6feb;
+  color: #ffffff;
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-weight: 600;
+  pointer-events: none;
+  margin-left: 4px;
+}

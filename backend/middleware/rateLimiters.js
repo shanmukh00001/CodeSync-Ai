@@ -38,7 +38,21 @@ const registerLimiter = rateLimit({
     },
 });
 
+const otpLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    max: 5, // 5 OTP requests per 5 min per IP
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        error: {
+            message: "Too many OTP requests. Please wait a few minutes before trying again.",
+            code: "RATE_LIMITED",
+        },
+    },
+});
+
 module.exports = {
     authLimiter,
     registerLimiter,
+    otpLimiter,
 };

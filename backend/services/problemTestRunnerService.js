@@ -1,11 +1,57 @@
 const { executeTestCase } = require("./testCaseExecutionService");
 const {
-  isEligibleForUnifiedExecution,
+  isEligibleForUnifiedExecution: isEligibleCppUnifiedExecution,
   generateCppMultiTestHarness,
   parseMultiTestHarnessOutput,
 } = require("./cppMultiTestHarnessService");
+const { generatePythonMultiTestHarness } = require("./languageRunners/pythonHarnessService");
+const { generateJavascriptMultiTestHarness } = require("./languageRunners/javascriptHarnessService");
+const { generateJavaMultiTestHarness } = require("./languageRunners/javaHarnessService");
 const executionService = require("./executionService");
 const { compareOutput } = require("./outputComparatorService");
+
+/**
+ * Checks whether a problem & language can run in unified multi-test execution mode.
+ * 
+ * @param {Object} problem
+ * @param {string} language
+ * @returns {boolean}
+ */
+function isEligibleForUnifiedExecution(problem, language) {
+  const normLang = (language || "cpp").toLowerCase();
+  if (normLang === "cpp" || normLang === "c++") {
+    return isEligibleCppUnifiedExecution(problem, language);
+  }
+  if (["python", "py", "python3", "javascript", "js", "node", "java"].includes(normLang)) {
+    return Boolean(
+      problem &&
+      problem.execution &&
+      typeof problem.execution.functionName === "string" &&
+      Array.isArray(problem.execution.parameters) &&
+      Array.isArray(problem.testCases) &&
+      problem.testCases.length > 0
+    );
+  }
+  return false;
+}
+
+/**
+ * Generates the appropriate unified multi-test harness for the target language.
+ */
+function generateLanguageMultiTestHarness({ solutionCode, problem, testCases, language }) {
+  const normLang = (language || "cpp").toLowerCase();
+  if (normLang === "python" || normLang === "py" || normLang === "python3") {
+    return generatePythonMultiTestHarness({ solutionCode, problem, testCases });
+  }
+  if (normLang === "javascript" || normLang === "js" || normLang === "node") {
+    return generateJavascriptMultiTestHarness({ solutionCode, problem, testCases });
+  }
+  if (normLang === "java") {
+    return generateJavaMultiTestHarness({ solutionCode, problem, testCases });
+  }
+  // Default to C++
+  return generateCppMultiTestHarness({ solutionCode, problem, testCases });
+}
 
 /**
  * Validates the inputs required to run a multi-test problem suite.
@@ -65,8 +111,7 @@ function sanitizeTestResult(result, testIndex, originalTestCase) {
 }
 
 /**
- * Executes problem test cases using the unified single-compilation C++ multi-test harness.
- * Compiles ONCE on Piston, runs all test cases inside one sandbox, and parses structured output.
+ * Executes problem test cases using the unified single-compilation multi-test harness.
  * 
  * @param {Object} params
  * @param {Object} params.problem
@@ -84,18 +129,38 @@ async function runUnifiedMultiTestProblem({
   const totalTestCases = selectedTestCases.length;
   const rawTestCases = selectedTestCases.map(({ tc }) => tc);
 
-  // 1. Generate unified C++ harness for all selected test cases
-  const harnessResult = generateCppMultiTestHarness({
+  // 1. Generate unified harness for all selected test cases in target language
+  const harnessResult = generateLanguageMultiTestHarness({
     solutionCode: code,
     problem,
     testCases: rawTestCases,
+    language,
   });
 
-  // 2. Execute once via Piston using standard sandbox limits (Piston default 60s compile / 15s run)
+  // 2. Execute once via Piston with language-appropriate timeouts
+  // C++ requires GCC compilation which is slower; interpreted languages skip compile step
+  const timeoutConfig = {};
+  const normLang = (language || "cpp").toLowerCase();
+  if (normLang === "cpp" || normLang === "c++") {
+    // GCC compilation is inherently slow on low-RAM hardware (25-30s with STL headers)
+    // -O0 disables optimization passes, reducing CPU time and memory pressure from ~200MB
+    // Don't restrict compile time — let Piston use its default
+    timeoutConfig.compileArgs = ["-O0"];
+    timeoutConfig.runTimeout = 10000;     // 10s for execution
+  } else if (normLang === "java") {
+    timeoutConfig.compileTimeout = 10000; // 10s for javac
+    timeoutConfig.runTimeout = 10000;     // 10s for execution
+  } else {
+    // Python, JavaScript — interpreted, no compile step
+    timeoutConfig.runTimeout = 10000;     // 10s for execution
+  }
+
   const execResult = await executionService.execute({
     language,
     sourceCode: harnessResult.source,
+    ...timeoutConfig,
   });
+
 
   const execRuntimeMs = execResult.run?.cpuTime ?? 0;
   const execMemoryKb = execResult.run?.memory ? Math.round(execResult.run.memory / 1000) : 0;

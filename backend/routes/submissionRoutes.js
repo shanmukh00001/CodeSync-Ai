@@ -269,6 +269,7 @@ router.get("/problem/:problemId/history", protect, async (req, res, next) => {
 // Rate limiter for AI Code Review: Max 5 reviews per minute per authenticated user
 const rateLimit = require("express-rate-limit");
 const { reviewCode } = require("../services/ai/aiReviewService");
+const { generateHint } = require("../services/ai/aiHintService");
 const { getAIProvider } = require("../services/ai/aiProviderFactory");
 
 const aiReviewLimiter = rateLimit({
@@ -288,6 +289,30 @@ const aiReviewLimiter = rateLimit({
     next(
       new AppError(
         "AI review rate limit reached. Please wait a minute before requesting another review.",
+        429,
+        "AI_RATE_LIMIT"
+      )
+    );
+  },
+});
+
+// Rate limiter for AI Hints: Max 6 hints per minute per authenticated user
+const aiHintLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipFailedRequests: true,
+  validate: {
+    keyGeneratorIpFallback: false,
+  },
+  keyGenerator: (req) => {
+    return req.userId ? String(req.userId) : req.ip;
+  },
+  handler: (req, res, next) => {
+    next(
+      new AppError(
+        "AI hint rate limit reached. Please wait a minute before requesting another hint.",
         429,
         "AI_RATE_LIMIT"
       )
@@ -357,6 +382,94 @@ router.post("/review", protect, aiReviewLimiter, async (req, res, next) => {
     // 4. Invoke decoupled AI review service
     const provider = getAIProvider();
     const result = await reviewCode(
+      {
+        problemId: String(problem._id),
+        language: language.trim().toLowerCase(),
+        code,
+        roomId: roomId ? roomId.trim() : null,
+        problem: {
+          title: problem.title,
+          description: problem.description,
+          difficulty: problem.difficulty,
+          constraints: problem.constraints || [],
+          examples: problem.examples || [],
+        },
+        lastExecutionResult,
+      },
+      provider
+    );
+
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/submissions/hint
+// Protected on-demand Socratic AI Hint endpoint
+router.post("/hint", protect, aiHintLimiter, async (req, res, next) => {
+  try {
+    const { problemId, language, code, roomId, lastExecutionResult } = req.body;
+
+    // 1. Validate required fields & format
+    if (!problemId) {
+      throw new AppError("problemId is required", 400, "AI_INVALID_INPUT");
+    }
+    if (!mongoose.Types.ObjectId.isValid(problemId)) {
+      throw new AppError("Invalid problemId format", 400, "AI_INVALID_INPUT");
+    }
+    if (code === undefined || code === null) {
+      throw new AppError("Code is required", 400, "AI_INVALID_INPUT");
+    }
+    if (typeof code !== "string") {
+      throw new AppError("Code must be a string", 400, "AI_INVALID_INPUT");
+    }
+    if (code.length > 65536) {
+      throw new AppError("Code length exceeds maximum allowed limit of 65536 characters", 400, "AI_INVALID_INPUT");
+    }
+
+    const allowedLanguages = ["cpp", "javascript", "python", "java"];
+    if (!language || typeof language !== "string" || !allowedLanguages.includes(language.trim().toLowerCase())) {
+      throw new AppError(
+        `Unsupported language: ${language}. Allowed languages are: ${allowedLanguages.join(", ")}`,
+        400,
+        "AI_INVALID_INPUT"
+      );
+    }
+
+    // 2. Load Problem from MongoDB selecting only public fields (never hidden test fixtures)
+    const problem = await Problem.findById(problemId).select("title description difficulty constraints examples");
+    if (!problem) {
+      throw new AppError("Problem not found", 404, "PROBLEM_NOT_FOUND");
+    }
+
+    // 3. Optional Room verification
+    if (roomId) {
+      if (typeof roomId !== "string" || !roomId.trim()) {
+        throw new AppError("Invalid roomId format", 400, "AI_INVALID_INPUT");
+      }
+
+      const roomDoc = await Room.findOne({ roomId: roomId.trim() });
+      if (!roomDoc) {
+        throw new AppError("Room not found", 404, "ROOM_NOT_FOUND");
+      }
+
+      if (roomDoc.status === "CLOSED") {
+        throw new AppError("Cannot request AI hint in a closed room", 400, "ROOM_CLOSED");
+      }
+
+      const isMember = roomDoc.users.some(
+        (userId) => userId.toString() === req.userId.toString()
+      );
+
+      if (!isMember) {
+        throw new AppError("You are not a member of this room", 403, "FORBIDDEN");
+      }
+    }
+
+    // 4. Invoke decoupled AI hint service
+    const provider = getAIProvider();
+    const result = await generateHint(
       {
         problemId: String(problem._id),
         language: language.trim().toLowerCase(),

@@ -119,6 +119,30 @@ function initSocket(httpServer, allowedOrigins) {
       }
     });
 
+    // Client sends real-time cursor update
+    socket.on("cursor:update", async (payload) => {
+      try {
+        if (!payload || typeof payload !== "object") return;
+        const { roomId, position, user } = payload;
+        if (!roomId || typeof roomId !== "string") return;
+        if (!position || typeof position !== "object") return;
+        if (!socket.userId) return;
+
+        // Broadcast cursor position to other connected peers in the room
+        socket.to(roomId).emit("cursor:update", {
+          roomId,
+          senderId: socket.userId.toString(),
+          position: {
+            lineNumber: Math.max(1, Number(position.lineNumber) || 1),
+            column: Math.max(1, Number(position.column) || 1),
+          },
+          user: user || { id: socket.userId.toString(), name: "Peer" },
+        });
+      } catch {
+        // Prevent unhandled errors from affecting socket loop
+      }
+    });
+
     // Client sends a discussion message
     socket.on("discussion:send", async (payload, callback) => {
       try {

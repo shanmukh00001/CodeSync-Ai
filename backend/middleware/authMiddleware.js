@@ -20,6 +20,7 @@ const protect = (req, res, next) => {
         );
 
         req.userId = decoded.userId;
+        req.userRole = decoded.role || "user";
 
         next();
 

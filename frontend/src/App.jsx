@@ -8,7 +8,13 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
+import AdminRoute from "./components/AdminRoute";
 import ProblemWorkspace from "./pages/ProblemWorkspace";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminProblemEditor from "./pages/AdminProblemEditor";
+import Unauthorized from "./pages/Unauthorized";
+import NotFound from "./pages/NotFound";
+
 function App() {
   return (
     <BrowserRouter>
@@ -37,6 +43,30 @@ function App() {
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/problems/new"
+          element={
+            <AdminRoute>
+              <AdminProblemEditor />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/problems/:id/edit"
+          element={
+            <AdminRoute>
+              <AdminProblemEditor />
+            </AdminRoute>
           }
         />
         <Route
@@ -72,6 +102,12 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* 403 Forbidden / Access Denied */}
+        <Route path="/unauthorized" element={<Unauthorized />} />
+
+        {/* 404 Catch-All Page Not Found */}
+        <Route path="*" element={<NotFound />} />
         
       </Routes>
     </BrowserRouter>

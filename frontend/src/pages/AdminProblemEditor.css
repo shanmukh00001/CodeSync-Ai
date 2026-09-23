@@ -1,0 +1,307 @@
+/* =========================================================
+   CODESYNC AI — ADMIN PROBLEM EDITOR STYLES
+   Industrial Slate & Safety Orange Developer Tool Theme
+   Strict Spatial Cadence & Design System Tokens
+   ========================================================= */
+
+.admin-editor-container {
+  min-height: 100vh;
+  background-color: var(--bg-primary, #080b0f);
+  color: var(--text-primary, #f8fafc);
+  padding: 28px 40px;
+  font-family: var(--font-sans, "IBM Plex Sans", sans-serif);
+}
+
+.editor-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-subtle, #1e2835);
+}
+
+.editor-nav h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary, #f8fafc);
+  margin: 4px 0 0;
+  letter-spacing: -0.02em;
+}
+
+.editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cancel-btn {
+  padding: 9px 16px;
+  background-color: var(--bg-elevated, #161e28);
+  color: var(--text-secondary, #94a3b8);
+  border: 1px solid var(--border-default, #232e3c);
+  border-radius: var(--radius-md, 8px);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.cancel-btn:hover {
+  background-color: var(--bg-subtle, #1e2835);
+  color: var(--text-primary, #f8fafc);
+  border-color: var(--border-strong, #334356);
+}
+
+.save-btn {
+  padding: 9px 20px;
+  background-color: var(--accent-primary, #f97316);
+  color: var(--text-inverse, #080b0f);
+  border: none;
+  border-radius: var(--radius-md, 8px);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(249, 115, 22, 0.35);
+  transition: all 0.15s ease;
+}
+
+.save-btn:hover {
+  background-color: var(--accent-hover, #fb923c);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.45);
+}
+
+.editor-layout {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .editor-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-card {
+  background-color: #111827;
+  border: 1px solid #1f293d;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+}
+
+.form-card h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0 0 16px;
+}
+
+.card-subtitle {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 2px 0 0;
+}
+
+.card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.add-item-btn {
+  background-color: #1e293b;
+  color: #f97316;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-item-btn:hover {
+  background-color: rgba(249, 115, 22, 0.15);
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.flex-2 {
+  flex: 2;
+}
+
+.form-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.form-group input,
+.form-group select {
+  background-color: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: #f8fafc;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #f97316;
+}
+
+.markdown-textarea {
+  width: 100%;
+  background-color: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 12px;
+  color: #f8fafc;
+  font-size: 13px;
+  font-family: 'JetBrains Mono', monospace;
+  outline: none;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.markdown-textarea:focus {
+  border-color: #f97316;
+}
+
+.nested-item-box {
+  background-color: #0d1322;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.hidden-testcase-box {
+  border-color: rgba(168, 85, 247, 0.35);
+  background-color: rgba(168, 85, 247, 0.04);
+}
+
+.nested-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #cbd5e1;
+  margin-bottom: 10px;
+}
+
+.hidden-pill {
+  font-size: 10px;
+  background-color: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  color: #f87171;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.remove-btn:hover {
+  text-decoration: underline;
+}
+
+/* Side Panel / Monaco */
+.sticky-editor-card {
+  position: sticky;
+  top: 24px;
+}
+
+.editor-header-tabs {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.lang-tabs {
+  display: flex;
+  gap: 6px;
+  background-color: #0f172a;
+  padding: 3px;
+  border-radius: 6px;
+  border: 1px solid #1e293b;
+}
+
+.lang-tab-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lang-tab-btn.active {
+  background-color: #1e293b;
+  color: #f97316;
+}
+
+.monaco-wrapper {
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.admin-editor-loading {
+  text-align: center;
+  padding: 80px 20px;
+  color: #94a3b8;
+}
+
+.admin-success-banner {
+  background-color: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #4ade80;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}

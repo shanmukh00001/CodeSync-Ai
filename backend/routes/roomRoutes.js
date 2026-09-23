@@ -75,11 +75,11 @@ router.post("/create", protect, async (req, res) => {
         if (user.recentRooms.length > 10) {
             user.recentRooms = user.recentRooms.slice(0, 10);
         }
-        await user.save();
+        const populatedRoom = await Room.findById(room._id).populate("users", "name email");
 
         res.status(201).json({
             message: "Room created successfully",
-            room: room
+            room: populatedRoom || room
         });
 
     } catch (error) {
@@ -178,12 +178,16 @@ router.post("/join", protect, async (req, res) => {//req client to server what h
         }
         await user.save();
 
+        const populatedRoom = await Room.findById(room._id)
+            .populate("selectedProblem")
+            .populate("users", "name email");
+
         // Emit participant:joined via Socket.IO only after successful DB updates
         const io = getIO();
         if (io) {
             io.to(roomId).emit("participant:joined", {
                 roomId: room.roomId,
-                users: room.users,
+                users: populatedRoom?.users || room.users,
                 participantsCount: room.users.length,
                 joinedUserId: req.userId
             });
@@ -192,7 +196,7 @@ router.post("/join", protect, async (req, res) => {//req client to server what h
         // Send success response
         res.status(200).json({
             message: "Joined room successfully",
-            room: room
+            room: populatedRoom || room
         });
 
     } catch (error) {
@@ -411,11 +415,13 @@ router.post("/:roomId/leave", protect,validateRoomId, async (req, res) => {
         await user.save();
 
         // Emit participant:left via Socket.IO only after DB save
+        const populatedRemaining = await Room.findById(room._id).populate("users", "name email");
+
         const io = getIO();
         if (io) {
             io.to(roomId).emit("participant:left", {
                 roomId: room.roomId,
-                users: room.users,
+                users: populatedRemaining?.users || room.users,
                 participantsCount: room.users.length,
                 leftUserId: req.userId,
                 newCreatedBy: room.createdBy

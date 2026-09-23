@@ -1,0 +1,21 @@
+{
+  "inherits": [
+    {
+      "path": "~/.gemini/config/plugins.json",
+      "include_only": [
+        "modern-web-guidance-plugin",
+        "chrome-devtools-plugin",
+        "gemini-api"
+      ],
+      "exclude": [
+        "dart.*",
+        "flutter.*",
+        "android.*",
+        "science.*",
+        "firebase.*",
+        "data-agent-kit.*",
+        "data_agent_kit.*"
+      ]
+    }
+  ]
+}

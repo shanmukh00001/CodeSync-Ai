@@ -28,6 +28,29 @@
   min-width: 0;
 }
 
+.activity-grid-with-labels {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+}
+
+.activity-weekday-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-top: 1px;
+}
+
+.activity-weekday-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  height: 14px;
+  line-height: 14px;
+  color: var(--text-muted);
+  text-align: right;
+  min-width: 22px;
+}
+
 .activity-grid-weeks {
   display: flex;
   gap: 5px;

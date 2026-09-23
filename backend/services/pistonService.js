@@ -33,6 +33,7 @@ async function executeCode({
   files,
   stdin = "",
   args = [],
+  compileArgs,
   compileTimeout,
   runTimeout,
   compileMemoryLimit,
@@ -62,6 +63,7 @@ async function executeCode({
     files,
     stdin: typeof stdin === "string" ? stdin : "",
     args: Array.isArray(args) ? args : [],
+    ...(Array.isArray(compileArgs) && compileArgs.length > 0 ? { compile_args: compileArgs } : {}),
   };
 
   if (typeof compileTimeout === "number") {
@@ -93,7 +95,7 @@ async function executeCode({
         "Content-Type": "application/json",
         "Content-Length": Buffer.byteLength(payloadStr),
       },
-      timeout: (payload.compile_timeout || 60000) + (payload.run_timeout || 15000) + 10000,
+      timeout: (payload.compile_timeout || 60000) + (payload.run_timeout || 15000) + 5000,
     };
 
     const req = client.request(requestOptions, (res) => {

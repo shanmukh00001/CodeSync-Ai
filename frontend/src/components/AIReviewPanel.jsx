@@ -9,11 +9,7 @@ function formatLineRange(lineRange) {
   return `Lines ${lineRange.start}–${lineRange.end}`;
 }
 
-function AIReviewPanel({ review, loading, error, onClose }) {
-  if (!loading && !error && !review) {
-    return null;
-  }
-
+function AIReviewPanel({ review, loading, error, onClose, onRequestReview }) {
   return (
     <div className="ai-review-panel" role="region" aria-label="AI Code Review">
       <div className="ai-review-header">
@@ -35,6 +31,38 @@ function AIReviewPanel({ review, loading, error, onClose }) {
       </div>
 
       <div className="ai-review-body">
+        {!loading && !error && !review && (
+          <div className="ai-empty-placeholder">
+            <div className="ai-placeholder-icon">🤖</div>
+            <h3 className="ai-placeholder-title">No AI Review Generated Yet</h3>
+            <p className="ai-placeholder-desc">
+              Request an in-depth AI analysis of your current code draft to evaluate algorithmic time & space complexity, edge cases, code smells, and performance bottlenecks.
+            </p>
+            {onRequestReview && (
+              <button
+                type="button"
+                className="ai-placeholder-action-btn btn-review-action"
+                onClick={onRequestReview}
+              >
+                ⚡ Review Current Code
+              </button>
+            )}
+            <div className="ai-placeholder-features">
+              <div className="placeholder-feature-item">
+                <span className="feature-dot"></span>
+                <span>Time & Space complexity estimation</span>
+              </div>
+              <div className="placeholder-feature-item">
+                <span className="feature-dot"></span>
+                <span>Subtle bug & boundary condition detection</span>
+              </div>
+              <div className="placeholder-feature-item">
+                <span className="feature-dot"></span>
+                <span>Architectural cleanliness & best practices</span>
+              </div>
+            </div>
+          </div>
+        )}
         {loading && (
           <div className="ai-review-loading">
             <div className="ai-review-spinner" aria-hidden="true" />

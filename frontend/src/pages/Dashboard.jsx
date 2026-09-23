@@ -1,7 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback, useContext } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { createPortal } from "react-dom";
+import { AuthContext } from "../context/AuthContext";
 import ActivityHeatmap from "../components/ActivityHeatmap";
+import RecommendationsSection from "../components/RecommendationsSection";
+import ZebraChaseWidget from "../components/ZebraChaseWidget";
 import "./Dashboard.css";
 
 const LANGUAGE_LABELS = {
@@ -16,13 +19,13 @@ const formatLanguage = (code) =>
 
 function Dashboard() {
   const navigate = useNavigate();
+  const { isAdmin } = useContext(AuthContext);
   const [problems, setProblems] = useState([]);
   const [solvedProblemIds, setSolvedProblemIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
 
-  // State for difficulty filter
   const [difficulty, setDifficulty] = useState("All");
 
   // Personal Analytics State
@@ -30,12 +33,46 @@ function Dashboard() {
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
   const [analyticsError, setAnalyticsError] = useState("");
 
+  // Recommendations State (Stage 10.6)
+  const [recommendationsData, setRecommendationsData] = useState(null);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(true);
+  const [recommendationsError, setRecommendationsError] = useState("");
+
   const [roomMode, setRoomMode] = useState(null);
   const [roomName, setRoomName] = useState("");
   const [roomLanguage, setRoomLanguage] = useState("cpp");
   const [joinRoomId, setJoinRoomId] = useState("");
+  const [joinRoomLink, setJoinRoomLink] = useState("");
+  const [joinTab, setJoinTab] = useState("id"); // "id" | "link"
   const [roomError, setRoomError] = useState("");
   const [roomLoading, setRoomLoading] = useState(false);
+
+  // Fetch recommendations (Stage 10.6)
+  const fetchRecommendations = useCallback(async () => {
+    setRecommendationsLoading(true);
+    setRecommendationsError("");
+    try {
+      const response = await fetch("http://localhost:5000/api/users/recommendations", {
+        credentials: "include",
+      });
+      if (response.ok) {
+        const payload = await response.json();
+        if (payload && payload.success && payload.data) {
+          setRecommendationsData(payload.data);
+        } else {
+          setRecommendationsError("Could not load recommendations.");
+        }
+      } else if (response.status === 429) {
+        setRecommendationsError("Recommendation requests are temporarily limited. Try again shortly.");
+      } else {
+        setRecommendationsError("Recommendations are temporarily unavailable.");
+      }
+    } catch {
+      setRecommendationsError("Network error loading recommendations.");
+    } finally {
+      setRecommendationsLoading(false);
+    }
+  }, []);
 
   // Fetch personal analytics overview
   const fetchAnalytics = useCallback(async () => {
@@ -96,7 +133,8 @@ function Dashboard() {
 
     fetchProblemsAndSolved();
     fetchAnalytics();
-  }, [fetchAnalytics]);
+    fetchRecommendations();
+  }, [fetchAnalytics, fetchRecommendations]);
 
   // Close any open room modal on Escape
   useEffect(() => {
@@ -136,6 +174,8 @@ function Dashboard() {
   // Open the join room modal and reset its state
   const openJoinRoomModal = () => {
     setJoinRoomId("");
+    setJoinRoomLink("");
+    setJoinTab("id");
     setRoomError("");
     setRoomMode("join");
   };
@@ -144,6 +184,8 @@ function Dashboard() {
   const closeRoomModal = () => {
     setRoomMode(null);
     setRoomError("");
+    setJoinTab("id");
+    setJoinRoomLink("");
   };
 
   // ================= ACTIVE ROOM =================
@@ -308,12 +350,41 @@ function Dashboard() {
     }
   };
 
+  // Helper to extract clean Room ID from either raw ID, partial path, or full URL
+  const extractRoomId = (input) => {
+    if (!input) return "";
+    let trimmed = input.trim();
+    // If it's a URL (http://... or https://...) or contains /room/
+    if (trimmed.includes("/room/")) {
+      const parts = trimmed.split("/room/");
+      trimmed = parts[parts.length - 1].split(/[?#]/)[0];
+    } else if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+      try {
+        const parsed = new URL(trimmed);
+        const segments = parsed.pathname.split("/").filter(Boolean);
+        if (segments.length > 0) {
+          trimmed = segments[segments.length - 1];
+        }
+      } catch {
+        // Fallback to raw string
+      }
+    }
+    return trimmed.replace(/[^a-zA-Z0-9_-]/g, "");
+  };
+
   // Join room
   const handleJoinRoom = async (e) => {
     e.preventDefault();
 
-    if (!joinRoomId.trim()) {
-      setRoomError("Room ID is required.");
+    const rawInput = joinTab === "link" ? joinRoomLink : joinRoomId;
+    const targetRoomId = extractRoomId(rawInput);
+
+    if (!targetRoomId) {
+      setRoomError(
+        joinTab === "link"
+          ? "Please enter a valid Room invite link."
+          : "Room ID is required."
+      );
       return;
     }
 
@@ -330,7 +401,7 @@ function Dashboard() {
           },
           credentials: "include",
           body: JSON.stringify({
-            roomId: joinRoomId.trim(),
+            roomId: targetRoomId,
           }),
         }
       );
@@ -402,17 +473,41 @@ function Dashboard() {
           <span className="dashboard-brand-title">CodeSync AI</span>
         </div>
 
-        <button
-          type="button"
-          className="dashboard-profile-btn"
-          onClick={() => navigate("/profile")}
-          aria-label="View user profile"
-        >
-          <span className="profile-label">Profile</span>
-          <div className="profile-avatar-chip">
-            USR
-          </div>
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {isAdmin && (
+            <Link
+              to="/admin"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "6px 12px",
+                backgroundColor: "rgba(249, 115, 22, 0.15)",
+                color: "#fb923c",
+                border: "1px solid rgba(249, 115, 22, 0.35)",
+                borderRadius: "8px",
+                fontSize: "12px",
+                fontWeight: "700",
+                textDecoration: "none",
+                transition: "all 0.2s ease",
+              }}
+            >
+              <span>🛡️ Admin Portal</span>
+            </Link>
+          )}
+
+          <button
+            type="button"
+            className="dashboard-profile-btn"
+            onClick={() => navigate("/profile")}
+            aria-label="View user profile"
+          >
+            <span className="profile-label">Profile</span>
+            <div className="profile-avatar-chip">
+              USR
+            </div>
+          </button>
+        </div>
       </header>
 
 
@@ -529,28 +624,6 @@ function Dashboard() {
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Compact Activity Heatmap Card */}
-          <div className="dashboard-activity-panel">
-            <div className="dashboard-activity-header">
-              <div className="dashboard-activity-title-group">
-                <h3>Submission Activity</h3>
-                <span className="dashboard-activity-subtitle">Last 12 weeks cadence</span>
-              </div>
-              <button
-                type="button"
-                className="dashboard-analytics-link"
-                onClick={() => navigate("/profile")}
-                aria-label="View detailed analytics on profile"
-              >
-                Full Analytics →
-              </button>
-            </div>
-            <ActivityHeatmap
-              activity={analytics?.activity}
-              loading={analyticsLoading}
-            />
           </div>
         </section>
 
@@ -871,7 +944,56 @@ function Dashboard() {
 
           </div>
 
+          {/* ================= SAVE THE ZEBRA ANIMATED MASCOT ================= */}
+          <ZebraChaseWidget
+            solvedCount={analytics?.solved?.totalSolved || solvedProblemIds.size || 0}
+            currentStreak={analytics?.activity?.currentStreak || 0}
+            todaySubmissions={
+              (() => {
+                const now = new Date();
+                const todayKey = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(now.getUTCDate()).padStart(2, "0")}`;
+                const todayRecord = (analytics?.activity?.activityByDay || []).find((d) => d?.date === todayKey);
+                return todayRecord?.submissions ?? 0;
+              })()
+            }
+            onPracticeClick={() => {
+              const el = document.querySelector(".problems-section");
+              if (el) el.scrollIntoView({ behavior: "smooth" });
+            }}
+          />
+
         </aside>
+
+        {/* ================= RECOMMENDATIONS SECTION ================= */}
+        <RecommendationsSection
+          recommendationsData={recommendationsData}
+          loading={recommendationsLoading}
+          error={recommendationsError}
+          onRetry={fetchRecommendations}
+          onOpenProblem={(slug) => navigate(`/problems/${slug}`)}
+        />
+
+        {/* ================= SUBMISSION ACTIVITY (BOTTOM) ================= */}
+        <div className="dashboard-activity-panel">
+          <div className="dashboard-activity-header">
+            <div className="dashboard-activity-title-group">
+              <h3>Submission Activity</h3>
+              <span className="dashboard-activity-subtitle">Last 12 weeks cadence</span>
+            </div>
+            <button
+              type="button"
+              className="dashboard-analytics-link"
+              onClick={() => navigate("/profile")}
+              aria-label="View detailed analytics on profile"
+            >
+              Full Analytics →
+            </button>
+          </div>
+          <ActivityHeatmap
+            activity={analytics?.activity}
+            loading={analyticsLoading}
+          />
+        </div>
 
       </main>
 
@@ -1016,7 +1138,7 @@ function Dashboard() {
                   Join Room
                 </h2>
                 <p className="modal-subtitle">
-                  Enter the Room ID shared with you by another user.
+                  Enter a Room ID or paste an invite link shared with you.
                 </p>
               </div>
 
@@ -1035,24 +1157,83 @@ function Dashboard() {
               onSubmit={handleJoinRoom}
               noValidate
             >
-              <div className="form-group">
-                <label
-                  className="form-label"
-                  htmlFor="join-room-id"
+              {/* Toggle Tabs: Room ID vs Invite Link */}
+              <div className="join-modal-tabs" role="tablist">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={joinTab === "id"}
+                  className={`join-modal-tab-btn ${
+                    joinTab === "id" ? "is-active" : ""
+                  }`}
+                  onClick={() => {
+                    setJoinTab("id");
+                    setRoomError("");
+                  }}
                 >
                   Room ID
-                </label>
-                <input
-                  id="join-room-id"
-                  className="form-input"
-                  type="text"
-                  placeholder="Enter Room ID"
-                  value={joinRoomId}
-                  onChange={(e) => setJoinRoomId(e.target.value)}
-                  autoFocus
-                  disabled={roomLoading}
-                />
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={joinTab === "link"}
+                  className={`join-modal-tab-btn ${
+                    joinTab === "link" ? "is-active" : ""
+                  }`}
+                  onClick={() => {
+                    setJoinTab("link");
+                    setRoomError("");
+                  }}
+                >
+                  🔗 Invite Link
+                </button>
               </div>
+
+              {joinTab === "id" ? (
+                <div className="form-group">
+                  <label
+                    className="form-label"
+                    htmlFor="join-room-id"
+                  >
+                    Room ID
+                  </label>
+                  <input
+                    id="join-room-id"
+                    className="form-input"
+                    type="text"
+                    placeholder="e.g. room-abc123xyz"
+                    value={joinRoomId}
+                    onChange={(e) => setJoinRoomId(e.target.value)}
+                    autoFocus
+                    disabled={roomLoading}
+                  />
+                  <span className="form-help-text">
+                    Paste or type the unique alphanumeric Room ID.
+                  </span>
+                </div>
+              ) : (
+                <div className="form-group">
+                  <label
+                    className="form-label"
+                    htmlFor="join-room-link"
+                  >
+                    Room Invite Link
+                  </label>
+                  <input
+                    id="join-room-link"
+                    className="form-input"
+                    type="url"
+                    placeholder="https://.../room/abc123xyz"
+                    value={joinRoomLink}
+                    onChange={(e) => setJoinRoomLink(e.target.value)}
+                    autoFocus
+                    disabled={roomLoading}
+                  />
+                  <span className="form-help-text">
+                    Paste the full copied room URL or link to join instantly.
+                  </span>
+                </div>
+              )}
 
               {roomError && (
                 <p className="modal-error" role="alert">

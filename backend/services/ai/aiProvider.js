@@ -29,6 +29,38 @@ class AIProvider {
   async reviewCode(input) {
     throw new Error("Method reviewCode() must be implemented by concrete AI provider");
   }
+
+  /**
+   * Generates targeted, Socratic algorithmic guidance for a user without returning complete solutions.
+   * 
+   * @param {Object} input - Provider-independent hint input
+   * @param {string} input.language - Programming language ("cpp" | "javascript" | "python" | "java")
+   * @param {string} input.code - User source code
+   * @param {Object} input.problem - Problem context (public description, difficulty, examples, constraints)
+   * @param {string} input.problem.title - Problem title
+   * @param {string} input.problem.description - Problem description
+   * @param {string} input.problem.difficulty - Problem difficulty ("Easy" | "Medium" | "Hard")
+   * @param {Array<Object>} [input.problem.examples] - Visible example test cases
+   * @param {Array<string>} [input.problem.constraints] - Problem constraints
+   * @param {Object} [input.lastExecutionResult] - High-level execution summary
+   * @returns {Promise<Object>} Raw hint object prior to service validation
+   */
+  async generateHint(input) {
+    throw new Error("Method generateHint() must be implemented by concrete AI provider");
+  }
+
+  /**
+   * Decorates candidate coding challenges with personalized pedagogical rationale.
+   *
+   * @param {Object} input - Provider-independent recommendation input
+   * @param {Object} input.profileSummary - Sanitized user profile summary
+   * @param {Array<Object>} input.candidateProblems - Sanitized candidate problem metadata
+   * @returns {Promise<Object>} Raw recommendations object prior to service validation
+   */
+  async generateRecommendations(input) {
+    throw new Error("Method generateRecommendations() must be implemented by concrete AI provider");
+  }
 }
 
 module.exports = AIProvider;
+

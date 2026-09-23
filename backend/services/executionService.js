@@ -14,7 +14,43 @@ const LANGUAGE_CONFIG = {
     pistonVersion: "10.2.0",
     defaultFilename: "main.cpp",
   },
+  python: {
+    pistonLanguage: "python",
+    pistonVersion: "3.10.0",
+    defaultFilename: "solution.py",
+  },
+  py: {
+    pistonLanguage: "python",
+    pistonVersion: "3.10.0",
+    defaultFilename: "solution.py",
+  },
+  python3: {
+    pistonLanguage: "python",
+    pistonVersion: "3.10.0",
+    defaultFilename: "solution.py",
+  },
+  javascript: {
+    pistonLanguage: "javascript",
+    pistonVersion: "18.15.0",
+    defaultFilename: "solution.js",
+  },
+  js: {
+    pistonLanguage: "javascript",
+    pistonVersion: "18.15.0",
+    defaultFilename: "solution.js",
+  },
+  node: {
+    pistonLanguage: "javascript",
+    pistonVersion: "18.15.0",
+    defaultFilename: "solution.js",
+  },
+  java: {
+    pistonLanguage: "java",
+    pistonVersion: "15.0.2",
+    defaultFilename: "Main.java",
+  },
 };
+
 
 /**
  * Normalizes raw stage results (compile or run) from Piston.
@@ -107,6 +143,7 @@ async function execute({
   files,
   stdin = "",
   args = [],
+  compileArgs,
   compileTimeout,
   runTimeout,
   compileMemoryLimit,
@@ -165,6 +202,7 @@ async function execute({
       files: executionFiles,
       stdin,
       args,
+      compileArgs,
       compileTimeout,
       runTimeout,
       compileMemoryLimit,

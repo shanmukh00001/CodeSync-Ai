@@ -10,6 +10,8 @@ const app = express();
 
 const testRoutes = require("./routes/testRoutes");
 const userRoutes = require("./routes/userRoutes");
+const oauthRoutes = require("./routes/oauthRoutes");
+const adminProblemRoutes = require("./routes/adminProblemRoutes");
 const roomRoutes = require("./routes/roomRoutes");
 const problemRoutes = require("./routes/problemRoutes");
 const submissionRoutes = require("./routes/submissionRoutes");
@@ -58,8 +60,9 @@ app.get("/", (req, res) => {
 });
 
 app.use("/", testRoutes);
+app.use("/api/auth", oauthRoutes);
+app.use("/api/admin", adminProblemRoutes);
 app.use("/api/users", userRoutes);
-//app.use("/api/users", userRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use("/api/problems", problemRoutes);
 app.use("/api/submissions", submissionRoutes);

@@ -170,8 +170,12 @@ async function runStage8Verification() {
     ];
     await userA.user.save();
 
-    // Populate User A Submissions (7 submissions with mixed status and timeline)
+    // Populate User A Submissions (7 submissions across 3 consecutive active UTC days: today, yesterday, 2 days ago)
     const fakeRoomId = new mongoose.Types.ObjectId();
+    const now = new Date();
+    const dToday = new Date(now.getTime());
+    const dYesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const d2DaysAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
 
     await Submission.create([
       {
@@ -183,7 +187,7 @@ async function runStage8Verification() {
         status: "Accepted",
         runtimeMs: 30,
         memoryKb: 12000,
-        createdAt: new Date("2026-09-12T10:00:00.000Z"),
+        createdAt: d2DaysAgo,
       },
       {
         user: userA.user._id,
@@ -194,7 +198,7 @@ async function runStage8Verification() {
         status: "Accepted",
         runtimeMs: 10,
         memoryKb: 8000,
-        createdAt: new Date("2026-09-13T10:00:00.000Z"),
+        createdAt: dYesterday,
       },
       {
         user: userA.user._id,
@@ -205,7 +209,7 @@ async function runStage8Verification() {
         status: "Wrong Answer",
         runtimeMs: 20,
         memoryKb: 10000,
-        createdAt: new Date("2026-09-13T12:00:00.000Z"),
+        createdAt: dYesterday,
       },
       {
         user: userA.user._id,
@@ -216,7 +220,7 @@ async function runStage8Verification() {
         status: "Time Limit Exceeded",
         runtimeMs: null,
         memoryKb: null,
-        createdAt: new Date("2026-09-14T09:00:00.000Z"),
+        createdAt: dToday,
       },
       {
         user: userA.user._id,
@@ -227,7 +231,7 @@ async function runStage8Verification() {
         status: "Runtime Error",
         runtimeMs: 0,
         memoryKb: 0,
-        createdAt: new Date("2026-09-14T11:00:00.000Z"),
+        createdAt: dToday,
       },
       {
         user: userA.user._id,
@@ -238,7 +242,7 @@ async function runStage8Verification() {
         status: "Compilation Error",
         runtimeMs: null,
         memoryKb: null,
-        createdAt: new Date("2026-09-14T14:00:00.000Z"),
+        createdAt: dToday,
       },
       {
         user: userA.user._id,
@@ -249,7 +253,7 @@ async function runStage8Verification() {
         status: "Pending",
         runtimeMs: -5,
         memoryKb: null,
-        createdAt: new Date("2026-09-14T15:00:00.000Z"),
+        createdAt: dToday,
       },
     ]);
 

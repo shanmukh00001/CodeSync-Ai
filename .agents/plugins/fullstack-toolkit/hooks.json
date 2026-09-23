@@ -1,0 +1,12 @@
+{
+  "test-verification-hook": {
+    "enabled": true,
+    "PostInvocation": [
+      {
+        "type": "command",
+        "command": "node -e \"console.log(JSON.stringify({injectSteps:[{ephemeralMessage:'[Pre-completion Check] Ensure any modified backend/frontend endpoints have test coverage or verification before declaring task complete.'}]}))\"",
+        "timeout": 15
+      }
+    ]
+  }
+}
