@@ -75,6 +75,7 @@ router.post("/create", protect, async (req, res) => {
         if (user.recentRooms.length > 10) {
             user.recentRooms = user.recentRooms.slice(0, 10);
         }
+        await user.save();
         const populatedRoom = await Room.findById(room._id).populate("users", "name email");
 
         res.status(201).json({
