@@ -133,10 +133,6 @@ function ProblemWorkspace() {
         setIsSubmitting(false);
         setIsReviewing(false);
         setIsHintLoading(false);
-        setAiReview(null);
-        setAiReviewError("");
-        setAiHint(null);
-        setAiHintError("");
         setActiveTab("description");
 
         // Parse starter code
@@ -202,6 +198,49 @@ function ProblemWorkspace() {
 
     fetchProblem();
   }, [slug]);
+
+  // Restore saved AI Hint and AI Review on problem or language change
+  useEffect(() => {
+    if (!problem) return;
+    const problemKey = problem.slug || problem._id || slug;
+    if (!problemKey) return;
+
+    // Restore Hint
+    try {
+      const savedHintStr =
+        localStorage.getItem(`codesync:ai_hint_${problemKey}_${selectedLanguage}`) ||
+        localStorage.getItem(`codesync:ai_hint_${problemKey}`);
+      if (savedHintStr) {
+        const parsedHint = JSON.parse(savedHintStr);
+        if (parsedHint && typeof parsedHint === "object") {
+          setAiHint(parsedHint);
+          setAiHintError("");
+        }
+      } else {
+        setAiHint(null);
+      }
+    } catch {
+      // Ignore parse errors
+    }
+
+    // Restore Review
+    try {
+      const savedReviewStr =
+        localStorage.getItem(`codesync:ai_review_${problemKey}_${selectedLanguage}`) ||
+        localStorage.getItem(`codesync:ai_review_${problemKey}`);
+      if (savedReviewStr) {
+        const parsedReview = JSON.parse(savedReviewStr);
+        if (parsedReview && typeof parsedReview === "object") {
+          setAiReview(parsedReview);
+          setAiReviewError("");
+        }
+      } else {
+        setAiReview(null);
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }, [problem, selectedLanguage, slug]);
 
   const handleLanguageChange = (e) => {
     const newLang = e.target.value;
@@ -628,6 +667,15 @@ function ProblemWorkspace() {
       if (response.ok && data?.hint) {
         setAiHint(data.hint);
         setAiHintError("");
+        const problemKey = problem?.slug || problem?._id || slug;
+        if (problemKey) {
+          try {
+            localStorage.setItem(`codesync:ai_hint_${problemKey}_${selectedLanguage}`, JSON.stringify(data.hint));
+            localStorage.setItem(`codesync:ai_hint_${problemKey}`, JSON.stringify(data.hint));
+          } catch {
+            // Ignore quota errors
+          }
+        }
       } else {
         const errorMsg =
           data?.error?.message ||
@@ -723,6 +771,15 @@ function ProblemWorkspace() {
       if (response.ok && data?.review) {
         setAiReview(data.review);
         setAiReviewError("");
+        const problemKey = problem?.slug || problem?._id || slug;
+        if (problemKey) {
+          try {
+            localStorage.setItem(`codesync:ai_review_${problemKey}_${selectedLanguage}`, JSON.stringify(data.review));
+            localStorage.setItem(`codesync:ai_review_${problemKey}`, JSON.stringify(data.review));
+          } catch {
+            // Ignore quota errors
+          }
+        }
       } else {
         const errorMsg =
           data?.error?.message ||

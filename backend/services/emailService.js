@@ -7,16 +7,17 @@ const nodemailer = require("nodemailer");
 let transporter = null;
 
 function getTransporter() {
-    if (transporter) return transporter;
+    const user = (process.env.SMTP_USER || process.env.EMAIL_USER || "").trim();
+    const pass = (process.env.SMTP_PASS || process.env.EMAIL_PASS || "").replace(/\s+/g, "");
 
-    if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    if (user && pass) {
         transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST || "smtp.gmail.com",
             port: parseInt(process.env.SMTP_PORT || "587", 10),
             secure: process.env.SMTP_SECURE === "true", // true for 465, false for 587
             auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS,
+                user,
+                pass,
             },
         });
     } else {

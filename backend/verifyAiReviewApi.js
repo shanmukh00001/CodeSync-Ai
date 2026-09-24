@@ -20,7 +20,7 @@ const Room = require("./models/Room");
 const Submission = require("./models/Submission");
 const submissionRoutes = require("./routes/submissionRoutes");
 const errorMiddleware = require("./middleware/errorMiddleware");
-const { setAIProvider } = require("./services/ai/aiProviderFactory");
+const { setAIProvider, getAIProvider } = require("./services/ai/aiProviderFactory");
 const MockAiProvider = require("./services/ai/mockAiProvider");
 const GeminiProvider = require("./services/ai/geminiProvider");
 
@@ -505,9 +505,10 @@ async function runStage93Tests() {
     // SECTION 7: CONTROLLED LIVE GEMINI END-TO-END TEST
     // -------------------------------------------------------------
     console.log("\n--- 7. Optional Controlled Live API Test ---");
-    if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.startsWith("AQ.")) {
-      console.log("  ⚡ Running ONE live authenticated Gemini review request via HTTP endpoint...");
-      setAIProvider(new GeminiProvider({ apiKey: process.env.GEMINI_API_KEY, model: process.env.GEMINI_MODEL || "gemini-3.6-flash" }));
+    const activeProvider = getAIProvider();
+    if (process.env.GROQ_API_KEY || (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.startsWith("AQ."))) {
+      console.log("  ⚡ Running ONE live authenticated cloud review request via HTTP endpoint...");
+      setAIProvider(activeProvider);
 
       const liveHttpRes = await makeRequest(
         port,

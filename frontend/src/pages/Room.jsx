@@ -77,6 +77,54 @@ function Room() {
   const hintTokenRef = useRef(0);
   const hintCooldownTimerRef = useRef(null);
 
+  // Restore saved AI Hint and AI Review on activeProblem / room change
+  useEffect(() => {
+    if (!activeProblem?._id) return;
+    const roomKey = room?.roomId || routeRoomId || "global";
+    const problemKey = activeProblem._id;
+    const lang = room?.language || "cpp";
+
+    // Restore Hint
+    try {
+      const savedHintStr =
+        localStorage.getItem(`codesync:room_hint_${roomKey}_${problemKey}_${lang}`) ||
+        localStorage.getItem(`codesync:room_hint_${roomKey}_${problemKey}`) ||
+        localStorage.getItem(`codesync:ai_hint_${problemKey}_${lang}`) ||
+        localStorage.getItem(`codesync:ai_hint_${problemKey}`);
+      if (savedHintStr) {
+        const parsedHint = JSON.parse(savedHintStr);
+        if (parsedHint && typeof parsedHint === "object") {
+          setAiHint(parsedHint);
+          setAiHintError("");
+        }
+      } else {
+        setAiHint(null);
+      }
+    } catch {
+      // Ignore parse errors
+    }
+
+    // Restore Review
+    try {
+      const savedReviewStr =
+        localStorage.getItem(`codesync:room_review_${roomKey}_${problemKey}_${lang}`) ||
+        localStorage.getItem(`codesync:room_review_${roomKey}_${problemKey}`) ||
+        localStorage.getItem(`codesync:ai_review_${problemKey}_${lang}`) ||
+        localStorage.getItem(`codesync:ai_review_${problemKey}`);
+      if (savedReviewStr) {
+        const parsedReview = JSON.parse(savedReviewStr);
+        if (parsedReview && typeof parsedReview === "object") {
+          setAiReview(parsedReview);
+          setAiReviewError("");
+        }
+      } else {
+        setAiReview(null);
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }, [activeProblem?._id, room?.language, room?.roomId, routeRoomId]);
+
   // ================= LEAVE / END =================
   const [leaving, setLeaving] = useState(false);
   const [leaveError, setLeaveError] = useState("");
@@ -1019,6 +1067,18 @@ function Room() {
       if (response.ok && data?.hint) {
         setAiHint(data.hint);
         setAiHintError("");
+        const roomKey = room?.roomId || routeRoomId || "global";
+        const problemKey = activeProblem?._id;
+        const lang = room?.language || "cpp";
+        if (problemKey) {
+          try {
+            localStorage.setItem(`codesync:room_hint_${roomKey}_${problemKey}_${lang}`, JSON.stringify(data.hint));
+            localStorage.setItem(`codesync:room_hint_${roomKey}_${problemKey}`, JSON.stringify(data.hint));
+            localStorage.setItem(`codesync:ai_hint_${problemKey}_${lang}`, JSON.stringify(data.hint));
+          } catch {
+            // Ignore quota errors
+          }
+        }
       } else {
         const errorMsg =
           data?.error?.message ||
@@ -1100,6 +1160,18 @@ function Room() {
       if (response.ok && data?.review) {
         setAiReview(data.review);
         setAiReviewError("");
+        const roomKey = room?.roomId || routeRoomId || "global";
+        const problemKey = activeProblem?._id;
+        const lang = room?.language || "cpp";
+        if (problemKey) {
+          try {
+            localStorage.setItem(`codesync:room_review_${roomKey}_${problemKey}_${lang}`, JSON.stringify(data.review));
+            localStorage.setItem(`codesync:room_review_${roomKey}_${problemKey}`, JSON.stringify(data.review));
+            localStorage.setItem(`codesync:ai_review_${problemKey}_${lang}`, JSON.stringify(data.review));
+          } catch {
+            // Ignore quota errors
+          }
+        }
       } else {
         const errorMsg =
           data?.error?.message ||

@@ -19,6 +19,10 @@ function getAIProvider(options = {}) {
     return new MockAiProvider();
   }
 
+  if (defaultProvider && !options.provider) {
+    return defaultProvider;
+  }
+
   const providerType = (options.provider || process.env.AI_PROVIDER || "groq").toLowerCase();
 
   if (providerType === "mock") {
@@ -26,23 +30,16 @@ function getAIProvider(options = {}) {
   }
 
   if (providerType === "groq") {
-    if (!defaultProvider || !(defaultProvider instanceof GroqProvider)) {
-      defaultProvider = new GroqProvider();
-    }
+    defaultProvider = new GroqProvider();
     return defaultProvider;
   }
 
   if (providerType === "local") {
-    if (!defaultProvider || !(defaultProvider instanceof LocalAIProvider)) {
-      defaultProvider = new LocalAIProvider();
-    }
+    defaultProvider = new LocalAIProvider();
     return defaultProvider;
   }
 
-  if (!defaultProvider || !(defaultProvider instanceof GeminiProvider)) {
-    defaultProvider = new GeminiProvider();
-  }
-
+  defaultProvider = new GeminiProvider();
   return defaultProvider;
 }
 
