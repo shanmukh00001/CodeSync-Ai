@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import { AuthContext } from "../context/AuthContext";
+import { API_BASE_URL } from "../config/api";
 import "./AdminProblemEditor.css";
 
 const DEFAULT_STARTER_CODES = {
@@ -89,7 +90,7 @@ export default function AdminProblemEditor() {
       const fetchProblemDetails = async () => {
         setLoading(true);
         try {
-          const res = await fetch(`http://localhost:5000/api/admin/problems/${id}`, {
+          const res = await fetch(`${API_BASE_URL}/api/admin/problems/${id}`, {
             credentials: "include",
           });
           const data = await res.json();
@@ -246,8 +247,8 @@ export default function AdminProblemEditor() {
       };
 
       const url = isEditMode
-        ? `http://localhost:5000/api/admin/problems/${id}`
-        : "http://localhost:5000/api/admin/problems";
+        ? `${API_BASE_URL}/api/admin/problems/${id}`
+        : `${API_BASE_URL}/api/admin/problems`;
 
       const method = isEditMode ? "PUT" : "POST";
 

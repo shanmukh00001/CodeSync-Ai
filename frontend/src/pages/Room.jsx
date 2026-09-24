@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext.jsx";
+import { API_BASE_URL } from "../config/api";
 import RoomHeader from "../components/room/RoomHeader";
 import RoomProblemPanel from "../components/room/RoomProblemPanel";
 import RoomEditorPanel from "../components/room/RoomEditorPanel";
@@ -121,7 +122,7 @@ function Room() {
 
       try {
         const response = await fetch(
-          `http://localhost:5000/api/rooms/${routeRoomId}`,
+          `${API_BASE_URL}/api/rooms/${routeRoomId}`,
           { credentials: "include" }
         );
 
@@ -209,7 +210,7 @@ function Room() {
     setProblemsError("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/problems");
+      const response = await fetch(`${API_BASE_URL}/api/problems`);
       const data = await response.json().catch(() => null);
 
       if (!response.ok) {
@@ -234,7 +235,7 @@ function Room() {
     setDiscussionLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:5000/api/discussions/${routeRoomId}`,
+        `${API_BASE_URL}/api/discussions/${routeRoomId}`,
         { credentials: "include" }
       );
       const data = await response.json().catch(() => null);
@@ -393,7 +394,7 @@ function Room() {
       if (!codeDirtyRef.current) {
         try {
           const response = await fetch(
-            `http://localhost:5000/api/rooms/${routeRoomId}`,
+            `${API_BASE_URL}/api/rooms/${routeRoomId}`,
             { credentials: "include" }
           );
           const data = await response.json().catch(() => null);
@@ -438,7 +439,7 @@ function Room() {
 
       try {
         const response = await fetch(
-          `http://localhost:5000/api/rooms/${room.roomId}`,
+          `${API_BASE_URL}/api/rooms/${room.roomId}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -481,7 +482,7 @@ function Room() {
       ) {
         try {
           navigator.sendBeacon(
-            `http://localhost:5000/api/rooms/${roomIdForCleanup}`,
+            `${API_BASE_URL}/api/rooms/${roomIdForCleanup}`,
             new Blob([JSON.stringify({ code: currentCode })], {
               type: "application/json",
             })
@@ -526,7 +527,7 @@ function Room() {
     setCodeSaving(true);
     try {
       const response = await fetch(
-        `http://localhost:5000/api/rooms/${room.roomId}`,
+        `${API_BASE_URL}/api/rooms/${room.roomId}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -604,7 +605,7 @@ function Room() {
     setLeaveError("");
     try {
       const response = await fetch(
-        `http://localhost:5000/api/rooms/${routeRoomId}/leave`,
+        `${API_BASE_URL}/api/rooms/${routeRoomId}/leave`,
         { method: "POST", credentials: "include" }
       );
       const data = await response.json().catch(() => null);
@@ -632,7 +633,7 @@ function Room() {
     setEndError("");
     try {
       const response = await fetch(
-        `http://localhost:5000/api/rooms/${routeRoomId}/end`,
+        `${API_BASE_URL}/api/rooms/${routeRoomId}/end`,
         { method: "POST", credentials: "include" }
       );
       const data = await response.json().catch(() => null);
@@ -665,7 +666,7 @@ function Room() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/rooms/${room.roomId}/problem`,
+        `${API_BASE_URL}/api/rooms/${room.roomId}/problem`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -756,7 +757,7 @@ function Room() {
     setOutput("Running code on visible test cases…");
 
     try {
-      const response = await fetch("http://localhost:5000/api/submissions/run", {
+      const response = await fetch(`${API_BASE_URL}/api/submissions/run`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -876,7 +877,7 @@ function Room() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/submissions/submit",
+        `${API_BASE_URL}/api/submissions/submit`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -996,7 +997,7 @@ function Room() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/submissions/hint",
+        `${API_BASE_URL}/api/submissions/hint`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1077,7 +1078,7 @@ function Room() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/submissions/review",
+        `${API_BASE_URL}/api/submissions/review`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1169,7 +1170,7 @@ function Room() {
     if (!sentViaSocket) {
       try {
         const res = await fetch(
-          `http://localhost:5000/api/discussions/${routeRoomId}`,
+          `${API_BASE_URL}/api/discussions/${routeRoomId}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

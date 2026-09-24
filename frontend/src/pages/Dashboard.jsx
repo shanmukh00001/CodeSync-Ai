@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { AuthContext } from "../context/AuthContext";
+import { API_BASE_URL } from "../config/api";
 import ActivityHeatmap from "../components/ActivityHeatmap";
 import RecommendationsSection from "../components/RecommendationsSection";
 import ZebraChaseWidget from "../components/ZebraChaseWidget";
@@ -52,7 +53,7 @@ function Dashboard() {
     setRecommendationsLoading(true);
     setRecommendationsError("");
     try {
-      const response = await fetch("http://localhost:5000/api/users/recommendations", {
+      const response = await fetch(`${API_BASE_URL}/api/users/recommendations`, {
         credentials: "include",
       });
       if (response.ok) {
@@ -79,7 +80,7 @@ function Dashboard() {
     setAnalyticsLoading(true);
     setAnalyticsError("");
     try {
-      const response = await fetch("http://localhost:5000/api/users/analytics", {
+      const response = await fetch(`${API_BASE_URL}/api/users/analytics`, {
         credentials: "include",
       });
       if (response.ok) {
@@ -102,8 +103,8 @@ function Dashboard() {
     const fetchProblemsAndSolved = async () => {
       try {
         const [problemsRes, solvedRes] = await Promise.allSettled([
-          fetch("http://localhost:5000/api/problems"),
-          fetch("http://localhost:5000/api/users/solved-problems", { credentials: "include" })
+          fetch(`${API_BASE_URL}/api/problems`),
+          fetch(`${API_BASE_URL}/api/users/solved-problems`, { credentials: "include" })
         ]);
 
         if (problemsRes.status === "fulfilled") {
@@ -203,7 +204,7 @@ function Dashboard() {
     setRecentRoomsLoading(true);
     try {
       const response = await fetch(
-        "http://localhost:5000/api/users/recent-rooms",
+        `${API_BASE_URL}/api/users/recent-rooms`,
         { credentials: "include" }
       );
       if (response.ok) {
@@ -225,7 +226,7 @@ function Dashboard() {
 
     try {
       const meResponse = await fetch(
-        "http://localhost:5000/api/users/me",
+        `${API_BASE_URL}/api/users/me`,
         { credentials: "include" }
       );
 
@@ -242,7 +243,7 @@ function Dashboard() {
       }
 
       const roomResponse = await fetch(
-        `http://localhost:5000/api/rooms/${roomId}`,
+        `${API_BASE_URL}/api/rooms/${roomId}`,
         { credentials: "include" }
       );
 
@@ -278,7 +279,7 @@ function Dashboard() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/rooms/${activeRoom.roomId}/leave`,
+        `${API_BASE_URL}/api/rooms/${activeRoom.roomId}/leave`,
         {
           method: "POST",
           credentials: "include",
@@ -317,7 +318,7 @@ function Dashboard() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/rooms/create",
+        `${API_BASE_URL}/api/rooms/create`,
         {
           method: "POST",
           headers: {
@@ -393,7 +394,7 @@ function Dashboard() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/rooms/join",
+        `${API_BASE_URL}/api/rooms/join`,
         {
           method: "POST",
           headers: {
@@ -428,7 +429,7 @@ function Dashboard() {
   const handleRejoinRecentRoom = async (roomId) => {
     try {
       const response = await fetch(
-        "http://localhost:5000/api/rooms/join",
+        `${API_BASE_URL}/api/rooms/join`,
         {
           method: "POST",
           headers: {

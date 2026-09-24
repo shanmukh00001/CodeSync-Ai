@@ -1,16 +1,17 @@
 const GeminiProvider = require("./geminiProvider");
 const MockAiProvider = require("./mockAiProvider");
 const LocalAIProvider = require("./localAiProvider");
+const GroqProvider = require("./groqProvider");
 
 let defaultProvider = null;
 
 /**
  * Returns the configured AI provider instance (singleton by default).
- * Supported AI_PROVIDER values: "mock", "gemini", "local".
+ * Supported AI_PROVIDER values: "mock", "gemini", "groq", "local".
  *
  * @param {Object} [options]
  * @param {boolean} [options.useMock] - Explicitly force mock provider
- * @param {string} [options.provider] - Explicitly override provider type ("mock"|"gemini"|"local")
+ * @param {string} [options.provider] - Explicitly override provider type ("mock"|"gemini"|"groq"|"local")
  * @returns {AIProvider}
  */
 function getAIProvider(options = {}) {
@@ -18,10 +19,17 @@ function getAIProvider(options = {}) {
     return new MockAiProvider();
   }
 
-  const providerType = (options.provider || process.env.AI_PROVIDER || "gemini").toLowerCase();
+  const providerType = (options.provider || process.env.AI_PROVIDER || "groq").toLowerCase();
 
   if (providerType === "mock") {
     return new MockAiProvider();
+  }
+
+  if (providerType === "groq") {
+    if (!defaultProvider || !(defaultProvider instanceof GroqProvider)) {
+      defaultProvider = new GroqProvider();
+    }
+    return defaultProvider;
   }
 
   if (providerType === "local") {

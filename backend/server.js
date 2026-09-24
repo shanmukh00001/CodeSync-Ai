@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser= require("cookie-parser");
-require("dotenv").config();//Because we need to load the environment variables before we try to use them.
+require("dotenv").config(); // Loads environment variables for CodeSync AI
 
 
 //express app
@@ -27,6 +27,7 @@ const allowedOrigins = [
   "http://127.0.0.1:5173",
   "http://127.0.0.1:5174",
   process.env.CLIENT_URL,
+  process.env.FRONTEND_URL,
 ].filter(Boolean);
 
 app.use(

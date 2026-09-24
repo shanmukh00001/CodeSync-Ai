@@ -4,6 +4,7 @@ import SubmissionsView from "../components/SubmissionsView";
 import AIReviewPanel from "../components/AIReviewPanel";
 import AIHintPanel from "../components/AIHintPanel";
 import MonacoCodeEditor from "../components/MonacoCodeEditor";
+import { API_BASE_URL } from "../config/api";
 import "./ProblemWorkspace.css";
 
 const LANGUAGE_OPTIONS = [
@@ -108,7 +109,7 @@ function ProblemWorkspace() {
     const fetchProblem = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/problems/${slug}`
+          `${API_BASE_URL}/api/problems/${slug}`
         );
 
         const data = await response.json();
@@ -171,12 +172,17 @@ function ProblemWorkspace() {
 
         setUserCode(initialCodeMap);
 
-        // Select initial language based on available code (prefer cpp)
+        // Check for saved user language preference for this problem or global preference
+        const savedPrefLang = localStorage.getItem(`codesync:last_lang_${problemKey}`) || localStorage.getItem("codesync:preferred_language");
+
+        // Select initial language based on preference or available code
         const availableLangs = Object.keys(initialCodeMap).filter(
           (lang) => initialCodeMap[lang] && initialCodeMap[lang].trim() !== ""
         );
 
-        if (availableLangs.length > 0) {
+        if (savedPrefLang && ["javascript", "python", "java", "cpp"].includes(savedPrefLang)) {
+          setSelectedLanguage(savedPrefLang);
+        } else if (availableLangs.length > 0) {
           if (initialCodeMap.cpp) {
             setSelectedLanguage("cpp");
           } else if (initialCodeMap.javascript) {
@@ -198,7 +204,13 @@ function ProblemWorkspace() {
   }, [slug]);
 
   const handleLanguageChange = (e) => {
-    setSelectedLanguage(e.target.value);
+    const newLang = e.target.value;
+    setSelectedLanguage(newLang);
+    localStorage.setItem("codesync:preferred_language", newLang);
+    if (problem) {
+      const problemKey = problem.slug || problem._id || slug;
+      localStorage.setItem(`codesync:last_lang_${problemKey}`, newLang);
+    }
   };
 
   const handleCodeChange = (newVal) => {
@@ -416,7 +428,7 @@ function ProblemWorkspace() {
     const languageSnapshot = selectedLanguage;
 
     try {
-      const response = await fetch("http://localhost:5000/api/submissions/run", {
+      const response = await fetch(`${API_BASE_URL}/api/submissions/run`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -488,7 +500,7 @@ function ProblemWorkspace() {
     const languageSnapshot = selectedLanguage;
 
     try {
-      const response = await fetch("http://localhost:5000/api/submissions/submit", {
+      const response = await fetch(`${API_BASE_URL}/api/submissions/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -595,7 +607,7 @@ function ProblemWorkspace() {
     const executionSummarySnapshot = lastExecutionSummary || undefined;
 
     try {
-      const response = await fetch("http://localhost:5000/api/submissions/hint", {
+      const response = await fetch(`${API_BASE_URL}/api/submissions/hint`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -690,7 +702,7 @@ function ProblemWorkspace() {
     const executionSummarySnapshot = lastExecutionSummary || undefined;
 
     try {
-      const response = await fetch("http://localhost:5000/api/submissions/review", {
+      const response = await fetch(`${API_BASE_URL}/api/submissions/review`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

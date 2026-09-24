@@ -3,6 +3,7 @@ import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import GoogleAuthButton from "../components/GoogleAuthButton";
 import OtpVerificationModal from "../components/OtpVerificationModal";
+import { API_BASE_URL } from "../config/api";
 import "./Signup.css";
 
 function Signup() {
@@ -29,7 +30,7 @@ function Signup() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/users/register",
+        `${API_BASE_URL}/api/users/register`,
         {
           method: "POST",
           headers: {

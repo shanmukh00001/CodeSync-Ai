@@ -2,86 +2,49 @@ const http = require("http");
 const https = require("https");
 const { URL } = require("url");
 
+const DEFAULT_LOCAL_PISTON_URL = "http://127.0.0.1:2000";
+
 /**
  * Returns the configured Piston base URL.
- * Defaults to http://localhost:2000 if not specified in environment.
+ * Defaults to http://127.0.0.1:2000 if not specified in environment.
  * 
  * @returns {string}
  */
 function getPistonBaseUrl() {
-  return process.env.PISTON_URL || "http://localhost:2000";
+  return process.env.PISTON_URL || process.env.PISTON_API_URL || DEFAULT_LOCAL_PISTON_URL;
 }
 
 /**
- * Executes source code files against the Piston /api/v2/execute endpoint.
- * 
- * @param {Object} params
- * @param {string} params.language - Piston language identifier (e.g. "c++")
- * @param {string} params.version - Piston language version (e.g. "10.2.0")
- * @param {Array<{ name?: string, content: string, encoding?: string }>} params.files - Source files to execute
- * @param {string} [params.stdin=""] - Standard input passed to program
- * @param {Array<string>} [params.args=[]] - CLI arguments passed to program
- * @param {number} [params.compileTimeout] - Max compile time in ms
- * @param {number} [params.runTimeout] - Max run time in ms
- * @param {number} [params.compileMemoryLimit] - Max compile memory limit in bytes
- * @param {number} [params.runMemoryLimit] - Max run memory limit in bytes
- * @returns {Promise<Object>} Raw JSON response returned by Piston API
+ * Builds a valid absolute URL for Piston endpoints regardless of base format.
+ *
+ * Examples:
+ *   - "http://127.0.0.1:2000" + "/execute" -> "http://127.0.0.1:2000/api/v2/execute"
+ *   - "http://127.0.0.1:2000/api/v2" + "/execute" -> "http://127.0.0.1:2000/api/v2/execute"
+ *   - "https://emkc.org/api/v2/piston" + "/execute" -> "https://emkc.org/api/v2/piston/execute"
+ *
+ * @param {string} baseUrl
+ * @param {string} endpoint
+ * @returns {URL}
  */
-async function executeCode({
-  language,
-  version,
-  files,
-  stdin = "",
-  args = [],
-  compileArgs,
-  compileTimeout,
-  runTimeout,
-  compileMemoryLimit,
-  runMemoryLimit,
-}) {
-  if (!language || typeof language !== "string") {
-    throw new Error("Piston execution error: 'language' must be a non-empty string");
-  }
+function buildPistonUrl(baseUrl, endpoint) {
+  const cleanBase = (baseUrl || DEFAULT_LOCAL_PISTON_URL).replace(/\/+$/, "");
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : "/" + endpoint;
 
-  if (!version || typeof version !== "string") {
-    throw new Error("Piston execution error: 'version' must be a non-empty string");
+  if (cleanBase.endsWith("/api/v2/piston")) {
+    return new URL(cleanBase + cleanEndpoint.replace(/^\/api\/v2/, ""));
   }
+  if (cleanBase.endsWith("/api/v2")) {
+    return new URL(cleanBase + cleanEndpoint.replace(/^\/api\/v2/, ""));
+  }
+  return new URL(cleanBase + "/api/v2" + cleanEndpoint.replace(/^\/api\/v2/, ""));
+}
 
-  if (!Array.isArray(files) || files.length === 0) {
-    throw new Error("Piston execution error: 'files' must be a non-empty array");
-  }
-
-  for (const file of files) {
-    if (!file || typeof file.content !== "string") {
-      throw new Error("Piston execution error: Each file in 'files' must have a string 'content'");
-    }
-  }
-
-  const payload = {
-    language,
-    version,
-    files,
-    stdin: typeof stdin === "string" ? stdin : "",
-    args: Array.isArray(args) ? args : [],
-    ...(Array.isArray(compileArgs) && compileArgs.length > 0 ? { compile_args: compileArgs } : {}),
-  };
-
-  if (typeof compileTimeout === "number") {
-    payload.compile_timeout = compileTimeout;
-  }
-  if (typeof runTimeout === "number") {
-    payload.run_timeout = runTimeout;
-  }
-  if (typeof compileMemoryLimit === "number") {
-    payload.compile_memory_limit = compileMemoryLimit;
-  }
-  if (typeof runMemoryLimit === "number") {
-    payload.run_memory_limit = runMemoryLimit;
-  }
-
+/**
+ * Internal helper to send execute request to a specific Piston base URL.
+ */
+function _sendExecuteRequest(baseUrl, payload) {
   const payloadStr = JSON.stringify(payload);
-  const baseUrl = getPistonBaseUrl();
-  const url = new URL("/api/v2/execute", baseUrl);
+  const url = buildPistonUrl(baseUrl, "/execute");
   const isHttps = url.protocol === "https:";
   const client = isHttps ? https : http;
 
@@ -148,13 +111,75 @@ async function executeCode({
 }
 
 /**
+ * Executes source code files against the Piston execute endpoint.
+ * 
+ * @param {Object} params
+ * @returns {Promise<Object>} Raw JSON response returned by Piston API
+ */
+async function executeCode({
+  language,
+  version,
+  files,
+  stdin = "",
+  args = [],
+  compileArgs,
+  compileTimeout,
+  runTimeout,
+  compileMemoryLimit,
+  runMemoryLimit,
+}) {
+  if (!language || typeof language !== "string") {
+    throw new Error("Piston execution error: 'language' must be a non-empty string");
+  }
+
+  if (!version || typeof version !== "string") {
+    throw new Error("Piston execution error: 'version' must be a non-empty string");
+  }
+
+  if (!Array.isArray(files) || files.length === 0) {
+    throw new Error("Piston execution error: 'files' must be a non-empty array");
+  }
+
+  for (const file of files) {
+    if (!file || typeof file.content !== "string") {
+      throw new Error("Piston execution error: Each file in 'files' must have a string 'content'");
+    }
+  }
+
+  const payload = {
+    language,
+    version,
+    files,
+    stdin: typeof stdin === "string" ? stdin : "",
+    args: Array.isArray(args) ? args : [],
+    ...(Array.isArray(compileArgs) && compileArgs.length > 0 ? { compile_args: compileArgs } : {}),
+  };
+
+  if (typeof compileTimeout === "number") {
+    payload.compile_timeout = compileTimeout;
+  }
+  if (typeof runTimeout === "number") {
+    payload.run_timeout = runTimeout;
+  }
+  if (typeof compileMemoryLimit === "number") {
+    payload.compile_memory_limit = compileMemoryLimit;
+  }
+  if (typeof runMemoryLimit === "number") {
+    payload.run_memory_limit = runMemoryLimit;
+  }
+
+  const primaryUrl = getPistonBaseUrl();
+  return _sendExecuteRequest(primaryUrl, payload);
+}
+
+/**
  * Checks connectivity and retrieves available runtimes from Piston.
  * 
  * @returns {Promise<Array<Object>>}
  */
 async function getRuntimes() {
-  const baseUrl = getPistonBaseUrl();
-  const url = new URL("/api/v2/runtimes", baseUrl);
+  const primaryUrl = getPistonBaseUrl();
+  const url = buildPistonUrl(primaryUrl, "/runtimes");
   const isHttps = url.protocol === "https:";
   const client = isHttps ? https : http;
 
@@ -187,12 +212,12 @@ async function getRuntimes() {
     );
 
     req.on("error", (err) => {
-      reject(new Error(`Failed to reach Piston at ${baseUrl}: ${err.message}`));
+      reject(new Error(`Failed to reach Piston at ${primaryUrl}: ${err.message}`));
     });
 
     req.on("timeout", () => {
       req.destroy();
-      reject(new Error(`Timed out connecting to Piston at ${baseUrl}`));
+      reject(new Error(`Timed out connecting to Piston at ${primaryUrl}`));
     });
 
     req.end();
@@ -203,4 +228,5 @@ module.exports = {
   getPistonBaseUrl,
   executeCode,
   getRuntimes,
+  buildPistonUrl,
 };

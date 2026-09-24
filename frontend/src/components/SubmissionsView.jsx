@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { API_BASE_URL } from "../config/api";
 import "./SubmissionsView.css";
 
 const LANGUAGE_LABELS = {
@@ -29,7 +30,7 @@ function SubmissionsView({ problemId, currentLanguage, refreshTrigger }) {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/submissions/problem/${problemId}/history`,
+        `${API_BASE_URL}/api/submissions/problem/${problemId}/history`,
         { credentials: "include" }
       );
 

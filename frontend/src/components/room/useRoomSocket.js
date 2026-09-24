@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { io } from "socket.io-client";
+import { SOCKET_URL } from "../../config/api";
 
 export function useRoomSocket({
   roomId,
@@ -43,7 +44,7 @@ export function useRoomSocket({
   useEffect(() => {
     if (!roomId) return;
 
-    const socket = io("http://localhost:5000", {
+    const socket = io(SOCKET_URL, {
       withCredentials: true,
       transports: ["websocket", "polling"],
     });

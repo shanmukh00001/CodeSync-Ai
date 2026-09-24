@@ -3,6 +3,7 @@ import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import GoogleAuthButton from "../components/GoogleAuthButton";
 import OtpVerificationModal from "../components/OtpVerificationModal";
+import { API_BASE_URL } from "../config/api";
 import "./Login.css";
 
 function Login() {
@@ -21,7 +22,7 @@ function Login() {
     setError("");
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/users/login", {
+      const response = await fetch(`${API_BASE_URL}/api/users/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -63,7 +64,7 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/users/send-otp", {
+      const response = await fetch(`${API_BASE_URL}/api/users/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, purpose: "login" }),

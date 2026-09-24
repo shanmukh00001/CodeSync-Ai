@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_BASE_URL } from "../config/api";
 
 export default function OtpVerificationModal({
   email,
@@ -78,7 +79,7 @@ export default function OtpVerificationModal({
     setInfoMessage("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/users/verify-otp", {
+      const response = await fetch(`${API_BASE_URL}/api/users/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -112,7 +113,7 @@ export default function OtpVerificationModal({
     setInfoMessage("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/users/send-otp", {
+      const response = await fetch(`${API_BASE_URL}/api/users/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, purpose }),

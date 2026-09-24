@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { API_BASE_URL } from "../config/api";
 import "./Settings.css";
 
 function Settings() {
@@ -38,7 +39,7 @@ function Settings() {
 
     setNameLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/users/name", {
+      const response = await fetch(`${API_BASE_URL}/api/users/name`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -74,7 +75,7 @@ function Settings() {
 
     setPasswordLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/users/password", {
+      const response = await fetch(`${API_BASE_URL}/api/users/password`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

@@ -1,4 +1,5 @@
 import React from "react";
+import { API_BASE_URL } from "../config/api";
 
 export default function GoogleAuthButton({ onSuccess, onError, text = "Sign in with Google" }) {
   const handleGoogleMockOrSDK = async () => {
@@ -26,7 +27,7 @@ export default function GoogleAuthButton({ onSuccess, onError, text = "Sign in w
         })
       )}.mock_signature`;
 
-      const response = await fetch("http://localhost:5000/api/auth/google", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/google`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

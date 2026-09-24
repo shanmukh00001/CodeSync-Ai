@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { API_BASE_URL } from "../config/api";
 import "./AdminDashboard.css";
 
 export default function AdminDashboard() {
@@ -23,7 +24,7 @@ export default function AdminDashboard() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("http://localhost:5000/api/admin/problems", {
+      const response = await fetch(`${API_BASE_URL}/api/admin/problems`, {
         credentials: "include",
       });
       const data = await response.json();
@@ -50,7 +51,7 @@ export default function AdminDashboard() {
     if (!deleteModalId) return;
     setDeleting(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/problems/${deleteModalId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/problems/${deleteModalId}`, {
         method: "DELETE",
         credentials: "include",
       });
