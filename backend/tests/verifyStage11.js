@@ -1,6 +1,6 @@
-const LocalAIProvider = require("./services/ai/localAiProvider");
-const { getAIProvider } = require("./services/ai/aiProviderFactory");
-const { runProblem } = require("./services/problemTestRunnerService");
+const LocalAIProvider = require("../services/ai/localAiProvider");
+const { getAIProvider } = require("../services/ai/aiProviderFactory");
+const { runProblem } = require("../services/problemTestRunnerService");
 
 async function runStage11Verification() {
   console.log("==================================================");

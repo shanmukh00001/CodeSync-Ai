@@ -83,6 +83,7 @@ initSocket(server, allowedOrigins);
 // Start periodic cleanup of abandoned rooms (runs every 60s, checks 10-min TTL)
 startRoomCleanupJob();
 
-server.listen(5000, () => {
-    console.log("Server is running on port 5000");
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
