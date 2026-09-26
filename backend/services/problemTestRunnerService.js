@@ -146,13 +146,13 @@ async function runUnifiedMultiTestProblem({
     // -O0 disables optimization passes, reducing CPU time and memory pressure from ~200MB
     // Don't restrict compile time — let Piston use its default
     timeoutConfig.compileArgs = ["-O0"];
-    timeoutConfig.runTimeout = 10000;     // 10s for execution
+    timeoutConfig.runTimeout = 3000;     // 3s max for execution (Piston ceiling)
   } else if (normLang === "java") {
     timeoutConfig.compileTimeout = 10000; // 10s for javac
-    timeoutConfig.runTimeout = 10000;     // 10s for execution
+    timeoutConfig.runTimeout = 3000;     // 3s max for execution (Piston ceiling)
   } else {
     // Python, JavaScript — interpreted, no compile step
-    timeoutConfig.runTimeout = 10000;     // 10s for execution
+    timeoutConfig.runTimeout = 3000;     // 3s max for execution (Piston ceiling)
   }
 
   const execResult = await executionService.execute({

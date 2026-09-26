@@ -164,10 +164,13 @@ async function executeCode({
   };
 
   if (typeof compileTimeout === "number") {
-    payload.compile_timeout = compileTimeout;
+    // Clamp compile_timeout to 10000ms max (Piston standard default)
+    payload.compile_timeout = Math.min(compileTimeout, 10000);
   }
   if (typeof runTimeout === "number") {
-    payload.run_timeout = runTimeout;
+    // Piston instances typically have a configured run_timeout limit of 3000ms.
+    // If run_timeout exceeds this limit, Piston rejects with HTTP 400. Clamp to 3000ms.
+    payload.run_timeout = Math.min(runTimeout, 3000);
   }
   if (typeof compileMemoryLimit === "number") {
     payload.compile_memory_limit = compileMemoryLimit;
@@ -180,11 +183,31 @@ async function executeCode({
   try {
     return await _sendExecuteRequest(primaryUrl, payload);
   } catch (primaryErr) {
+    // If Piston returned HTTP 400 because of run_timeout limit, retry without run_timeout so Piston uses its default
+    if (primaryErr?.message && primaryErr.message.includes("run_timeout cannot exceed")) {
+      try {
+        const payloadNoTimeout = { ...payload };
+        delete payloadNoTimeout.run_timeout;
+        return await _sendExecuteRequest(primaryUrl, payloadNoTimeout);
+      } catch (retryErr) {
+        // Continue to fallback if retry also failed
+      }
+    }
+
     // If primary failed and is not local Piston, attempt fallback to local Piston container
     if (!primaryUrl.includes("127.0.0.1") && !primaryUrl.includes("localhost")) {
       try {
         return await _sendExecuteRequest(DEFAULT_LOCAL_PISTON_URL, payload);
-      } catch {
+      } catch (fallbackErr) {
+        if (fallbackErr?.message && fallbackErr.message.includes("run_timeout cannot exceed")) {
+          try {
+            const payloadNoTimeout = { ...payload };
+            delete payloadNoTimeout.run_timeout;
+            return await _sendExecuteRequest(DEFAULT_LOCAL_PISTON_URL, payloadNoTimeout);
+          } catch {
+            // ignore
+          }
+        }
         // Propagate the original error if fallback also failed
         throw primaryErr;
       }
