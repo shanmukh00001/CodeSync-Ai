@@ -4,6 +4,7 @@ import SubmissionsView from "../components/SubmissionsView";
 import AIReviewPanel from "../components/AIReviewPanel";
 import AIHintPanel from "../components/AIHintPanel";
 import MonacoCodeEditor from "../components/MonacoCodeEditor";
+import OutputTerminal from "../components/common/OutputTerminal";
 import { API_BASE_URL } from "../config/api";
 import "./ProblemWorkspace.css";
 
@@ -1242,26 +1243,16 @@ function ProblemWorkspace() {
           </div>
         )}
 
-        <div className={`output-panel ${isOutputCollapsed ? "is-collapsed" : ""}`}>
-          <div className="output-header">
-            <span className="output-title">OUTPUT</span>
-            <button
-              type="button"
-              className="output-toggle-btn"
-              onClick={() => setIsOutputCollapsed((prev) => !prev)}
-              aria-expanded={!isOutputCollapsed}
-              aria-label={isOutputCollapsed ? "Expand output panel" : "Collapse output panel"}
-              title={isOutputCollapsed ? "Expand output panel" : "Collapse output panel"}
-            >
-              {isOutputCollapsed ? "▲ Expand" : "▼ Collapse"}
-            </button>
-          </div>
-          {!isOutputCollapsed && (
-            <div className="output-content">
-              <pre>{output}</pre>
-            </div>
-          )}
-        </div>
+        <OutputTerminal
+          className="output-panel"
+          output={output}
+          isRunning={isRunning}
+          isSubmitting={isSubmitting}
+          statusSummary={lastExecutionSummary}
+          onClear={() => setOutput("Run your code to see the output.")}
+          isCollapsed={isOutputCollapsed}
+          onToggleCollapse={() => setIsOutputCollapsed((prev) => !prev)}
+        />
       </section>
     </div>
   );

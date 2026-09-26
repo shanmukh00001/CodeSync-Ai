@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import MonacoCodeEditor from "../MonacoCodeEditor";
+import OutputTerminal from "../common/OutputTerminal";
 import { formatLanguage } from "./formatters";
 
 // Exactly matching ProblemWorkspace constants
@@ -7,7 +8,7 @@ const MIN_OUTPUT_HEIGHT = 100;
 const MIN_EDITOR_HEIGHT = 120;
 const DEFAULT_OUTPUT_HEIGHT = 220;
 const LS_OUTPUT_HEIGHT = "codesync-room-output-panel-height";
-const COLLAPSED_HEIGHT = 34;
+const COLLAPSED_HEIGHT = 38;
 
 export default function RoomEditorPanel({
   editorPanelRef,
@@ -35,6 +36,7 @@ export default function RoomEditorPanel({
   onToggleOutputCollapse,
   output,
   lastExecutionStatus,
+  onClearOutput,
   /* ── Collab bar props ── */
   linkCopied,
   onCopyLink,
@@ -265,33 +267,21 @@ export default function RoomEditorPanel({
         />
       )}
 
-      {/* ── Output Panel (identical structure & classes to ProblemWorkspace) ── */}
-      <div
-        className={`output-panel room-output-section${outputCollapsed ? " is-collapsed" : ""}`}
+      {/* ── Output Panel using OutputTerminal ── */}
+      <OutputTerminal
+        className="room-output-section"
         style={{
           height: `${outputCollapsed ? COLLAPSED_HEIGHT : outputHeight}px`,
         }}
-      >
-        {/* Output Header matching ProblemWorkspace */}
-        <div className="output-header room-output-header">
-          <div className="output-header-left">
-            <span className="output-title">OUTPUT</span>
-            {lastExecutionStatus ? (
-              <span
-                className={`room-output-status-tag ${
-                  lastExecutionStatus.isSuccess ? "is-success" : "is-failed"
-                }`}
-              >
-                {lastExecutionStatus.meta}
-              </span>
-            ) : (
-              <span className="room-panel-meta">
-                {isRunning ? "Running…" : isSubmitting ? "Submitting…" : "Idle"}
-              </span>
-            )}
-          </div>
-
-          <div className="output-header-right">
+        output={output}
+        isRunning={isRunning}
+        isSubmitting={isSubmitting}
+        statusSummary={lastExecutionStatus ? { status: lastExecutionStatus.meta } : null}
+        onClear={onClearOutput}
+        isCollapsed={outputCollapsed}
+        onToggleCollapse={onToggleOutputCollapse}
+        extraHeaderRight={
+          <div className="room-output-collab-controls">
             {/* Room Link pill */}
             <div className="room-collab-link-pill">
               <span className="room-collab-link-label">ROOM LINK</span>
@@ -402,28 +392,9 @@ export default function RoomEditorPanel({
             </button>
 
             <span className="room-collab-divider" aria-hidden="true" />
-
-            {/* Collapse / Expand toggle button (on far right, identical to ProblemWorkspace) */}
-            <button
-              type="button"
-              className="output-toggle-btn"
-              onClick={onToggleOutputCollapse}
-              aria-expanded={!outputCollapsed}
-              aria-label={outputCollapsed ? "Expand output panel" : "Collapse output panel"}
-              title={outputCollapsed ? "Expand output panel" : "Collapse output panel"}
-            >
-              {outputCollapsed ? "▲ Expand" : "▼ Collapse"}
-            </button>
           </div>
-        </div>
-
-        {/* Output Console Log Content */}
-        {!outputCollapsed && (
-          <div className="output-content room-output-content">
-            <pre>{output}</pre>
-          </div>
-        )}
-      </div>
+        }
+      />
     </section>
   );
 }

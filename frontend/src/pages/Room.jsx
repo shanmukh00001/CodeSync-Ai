@@ -1566,6 +1566,7 @@ function Room() {
           onToggleOutputCollapse={() => setOutputCollapsed((prev) => !prev)}
           output={output}
           lastExecutionStatus={lastExecutionStatus}
+          onClearOutput={() => setOutput("Run your code to see the output.")}
           linkCopied={linkCopied}
           onCopyLink={handleCopyLink}
           participantsOpen={participantsOpen}

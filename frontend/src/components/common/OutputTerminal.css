@@ -1,0 +1,676 @@
+/* ==========================================================================
+   OutputTerminal.css - Ultra-Modern Glassmorphic Output Panel
+   ========================================================================== */
+
+.output-terminal-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  background: radial-gradient(circle at top left, rgba(17, 24, 39, 0.75), rgba(7, 10, 15, 0.95));
+  backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 -8px 24px -6px rgba(0, 0, 0, 0.5);
+  font-family: var(--font-mono, 'JetBrains Mono', 'Fira Code', 'Consolas', monospace);
+  overflow: hidden;
+  position: relative;
+  transition: height var(--transition-normal, 0.2s cubic-bezier(0.2, 0, 0, 1));
+}
+
+.output-terminal-wrapper.is-collapsed {
+  height: 38px !important;
+  min-height: 38px !important;
+  overflow: hidden;
+}
+
+/* ---------------- Header Bar ---------------- */
+.output-terminal-header {
+  height: 38px;
+  min-height: 38px;
+  background: rgba(13, 18, 28, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  user-select: none;
+  z-index: 10;
+  gap: 12px;
+}
+
+.output-terminal-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.output-terminal-title-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+}
+
+.output-terminal-glyph {
+  color: var(--accent-primary, #f97316);
+  font-weight: 800;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.output-terminal-title {
+  color: #cbd5e1;
+}
+
+/* ---------------- Dynamic Status Badge Pill ---------------- */
+.output-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.output-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.output-status-icon {
+  font-size: 11px;
+  line-height: 1;
+}
+
+/* Idle State */
+.output-status-pill.is-idle {
+  background: rgba(148, 163, 184, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+}
+.output-status-pill.is-idle .output-status-dot {
+  background: #64748b;
+}
+
+/* Running / Evaluating State */
+.output-status-pill.is-running,
+.output-status-pill.is-submitting {
+  background: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  color: #fb923c;
+  animation: pulse-border 1.8s infinite;
+}
+.output-status-pill.is-running .output-status-dot,
+.output-status-pill.is-submitting .output-status-dot {
+  background: #f97316;
+  box-shadow: 0 0 8px #f97316;
+  animation: pulse-dot 1.2s infinite alternate;
+}
+.output-status-pill.is-running .output-status-icon,
+.output-status-pill.is-submitting .output-status-icon {
+  display: inline-block;
+  animation: spin-icon 1s linear infinite;
+}
+
+/* Accepted / Success */
+.output-status-pill.is-accepted {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  box-shadow: 0 0 12px -3px rgba(16, 185, 129, 0.3);
+}
+.output-status-pill.is-accepted .output-status-dot {
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+/* Wrong Answer */
+.output-status-pill.is-wrong {
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+}
+.output-status-pill.is-wrong .output-status-dot {
+  background: #f59e0b;
+}
+
+/* Error / Failed */
+.output-status-pill.is-error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+  box-shadow: 0 0 12px -3px rgba(239, 68, 68, 0.25);
+}
+.output-status-pill.is-error .output-status-dot {
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+}
+
+/* Warning */
+.output-status-pill.is-warning {
+  background: rgba(217, 119, 6, 0.14);
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  color: #f59e0b;
+}
+.output-status-pill.is-warning .output-status-dot {
+  background: #d97706;
+}
+
+/* Neutral */
+.output-status-pill.is-neutral {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+}
+.output-status-pill.is-neutral .output-status-dot {
+  background: #38bdf8;
+}
+
+/* ---------------- Header Right & Action Buttons ---------------- */
+.output-terminal-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.output-terminal-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.output-action-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+  line-height: 1.4;
+}
+
+.output-action-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.output-action-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.output-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.output-action-btn.is-copied {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.output-toggle-collapse-btn {
+  background: rgba(249, 115, 22, 0.08);
+  border-color: rgba(249, 115, 22, 0.2);
+  color: #fdba74;
+}
+
+.output-toggle-collapse-btn:hover:not(:disabled) {
+  background: rgba(249, 115, 22, 0.2);
+  border-color: rgba(249, 115, 22, 0.5);
+  color: #ffffff;
+  box-shadow: 0 0 12px -2px rgba(249, 115, 22, 0.4);
+}
+
+.output-collapse-icon {
+  font-size: 10px;
+}
+
+/* ---------------- Terminal Body Content ---------------- */
+.output-terminal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 14px 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: #07090e;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #e2e8f0;
+}
+
+.output-terminal-body:focus-visible {
+  outline: none;
+}
+
+/* Custom Scrollbars */
+.output-terminal-body::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.output-terminal-body::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+.output-terminal-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+}
+.output-terminal-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* ---------------- Initial Terminal State ---------------- */
+.output-terminal-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+  opacity: 0.85;
+}
+
+.output-prompt-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+}
+
+.output-prompt-sym {
+  color: #10b981;
+  font-weight: 700;
+}
+
+.output-prompt-cmd {
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+.output-prompt-hint {
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 2px;
+}
+
+.output-prompt-sub {
+  color: var(--accent-primary, #f97316);
+  font-weight: 700;
+}
+
+.output-prompt-shortcuts {
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.output-shortcut-chip {
+  display: inline-block;
+  font-size: 11px;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.output-shortcut-chip strong {
+  color: #e2e8f0;
+}
+
+/* ---------------- In Progress State ---------------- */
+.output-terminal-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 4px;
+}
+
+.output-loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(249, 115, 22, 0.2);
+  border-top-color: var(--accent-primary, #f97316);
+  border-radius: 50%;
+  animation: spin-icon 0.8s linear infinite;
+}
+
+.output-loading-text {
+  color: #fdba74;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+/* ---------------- Structured View ---------------- */
+.output-structured-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Telemetry Chips Bar */
+.output-telemetry-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.output-telemetry-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.output-telemetry-chip.is-success {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+.output-telemetry-chip.is-success .telemetry-value {
+  color: #34d399;
+  font-weight: 700;
+}
+
+.output-telemetry-chip.is-wrong {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+.output-telemetry-chip.is-wrong .telemetry-value {
+  color: #f87171;
+  font-weight: 700;
+}
+
+.telemetry-icon {
+  font-size: 11px;
+}
+
+.telemetry-label {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.telemetry-value {
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+/* ---------------- Test Case Diff Grid ---------------- */
+.output-diff-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.output-diff-card {
+  background: rgba(11, 15, 25, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.output-diff-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 3px;
+}
+
+.output-diff-card.is-input::before {
+  background: #38bdf8;
+}
+.output-diff-card.is-input .output-diff-tag {
+  color: #38bdf8;
+}
+
+.output-diff-card.is-expected::before {
+  background: #10b981;
+}
+.output-diff-card.is-expected .output-diff-tag {
+  color: #34d399;
+}
+
+.output-diff-card.is-actual::before {
+  background: #ef4444;
+}
+.output-diff-card.is-actual .output-diff-tag {
+  color: #f87171;
+}
+
+.output-diff-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.output-diff-tag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.output-diff-pre {
+  margin: 0;
+  font-family: inherit;
+  font-size: 12px;
+  color: #f1f5f9;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 8px 10px;
+  border-radius: 4px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+/* ---------------- Error Diagnostics Container ---------------- */
+.output-error-container {
+  background: rgba(30, 11, 15, 0.6);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.output-error-header {
+  background: rgba(239, 68, 68, 0.12);
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.output-error-badge {
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.output-error-title {
+  font-weight: 600;
+  color: #fca5a5;
+  font-size: 12px;
+}
+
+.output-error-pre {
+  margin: 0;
+  padding: 12px 14px;
+  color: #fca5a5;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+/* ---------------- Accepted Banner ---------------- */
+.output-accepted-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-top: 4px;
+}
+
+.accepted-banner-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid #10b981;
+  color: #34d399;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.accepted-banner-headline {
+  font-weight: 700;
+  color: #34d399;
+  font-size: 13px;
+}
+
+.accepted-banner-sub {
+  color: #94a3b8;
+  font-size: 11.5px;
+  margin-top: 2px;
+}
+
+/* ---------------- Raw Output Lines (with line numbers) ---------------- */
+.output-terminal-raw {
+  width: 100%;
+}
+
+.output-raw-pre {
+  margin: 0;
+  font-family: inherit;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.output-raw-line {
+  display: flex;
+  gap: 12px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  transition: background 0.1s ease;
+}
+
+.output-raw-line:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.output-raw-gutter {
+  color: #475569;
+  font-size: 11px;
+  user-select: none;
+  min-width: 24px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.output-raw-text {
+  flex: 1 1 auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #cbd5e1;
+}
+
+.output-raw-line.is-error-line {
+  background: rgba(239, 68, 68, 0.08);
+}
+.output-raw-line.is-error-line .output-raw-text {
+  color: #fca5a5;
+}
+.output-raw-line.is-error-line .output-raw-gutter {
+  color: #ef4444;
+}
+
+.output-raw-line.is-success-line {
+  background: rgba(16, 185, 129, 0.08);
+}
+.output-raw-line.is-success-line .output-raw-text {
+  color: #6ee7b7;
+}
+
+/* ---------------- Keyframes ---------------- */
+@keyframes spin-icon {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-dot {
+  from {
+    opacity: 0.6;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes pulse-border {
+  0% {
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 4px rgba(249, 115, 22, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
+  }
+}
