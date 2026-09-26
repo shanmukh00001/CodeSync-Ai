@@ -6,47 +6,47 @@ const pistonService = require("./pistonService");
 const LANGUAGE_CONFIG = {
   cpp: {
     pistonLanguage: "c++",
-    pistonVersion: "10.2.0",
+    pistonVersion: "*",
     defaultFilename: "main.cpp",
   },
   "c++": {
     pistonLanguage: "c++",
-    pistonVersion: "10.2.0",
+    pistonVersion: "*",
     defaultFilename: "main.cpp",
   },
   python: {
     pistonLanguage: "python",
-    pistonVersion: "3.10.0",
+    pistonVersion: "*",
     defaultFilename: "solution.py",
   },
   py: {
     pistonLanguage: "python",
-    pistonVersion: "3.10.0",
+    pistonVersion: "*",
     defaultFilename: "solution.py",
   },
   python3: {
     pistonLanguage: "python",
-    pistonVersion: "3.10.0",
+    pistonVersion: "*",
     defaultFilename: "solution.py",
   },
   javascript: {
     pistonLanguage: "javascript",
-    pistonVersion: "18.15.0",
+    pistonVersion: "*",
     defaultFilename: "solution.js",
   },
   js: {
     pistonLanguage: "javascript",
-    pistonVersion: "18.15.0",
+    pistonVersion: "*",
     defaultFilename: "solution.js",
   },
   node: {
     pistonLanguage: "javascript",
-    pistonVersion: "18.15.0",
+    pistonVersion: "*",
     defaultFilename: "solution.js",
   },
   java: {
     pistonLanguage: "java",
-    pistonVersion: "15.0.2",
+    pistonVersion: "*",
     defaultFilename: "Main.java",
   },
 };

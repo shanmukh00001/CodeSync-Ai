@@ -25,8 +25,10 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 var(--space-32);
-  background-color: var(--bg-surface);
-  border-bottom: 1px solid var(--border-subtle);
+  background-color: rgba(15, 20, 28, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .dashboard-brand {
@@ -356,60 +358,72 @@
   color: var(--text-primary);
 }
 
-/* Compact Activity Panel */
+/* Elevated Activity Cadence Panel */
 .dashboard-activity-panel {
   grid-column: 1 / -1;
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  padding: var(--space-16) var(--space-20);
+  background: rgba(15, 20, 28, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  padding: 18px 22px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-12);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  gap: var(--space-16);
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.5), 0 0 16px -2px rgba(249, 115, 22, 0.04);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   min-width: 0;
+  transition: all var(--transition-fast);
+}
+
+.dashboard-activity-panel:hover {
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
 .dashboard-activity-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 12px;
 }
 
 .dashboard-activity-title-group h3 {
   margin: 0;
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: var(--text-primary);
+  color: #ffffff;
 }
 
 .dashboard-activity-subtitle {
   font-size: 11.5px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
+  display: block;
+  margin-top: 2px;
 }
 
 .dashboard-analytics-link {
-  background: transparent;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-xs);
-  padding: 4px 10px;
-  color: var(--accent-primary);
+  background: rgba(249, 115, 22, 0.08);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 5px 12px;
+  color: #fb923c;
   font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 11.5px;
+  font-weight: 700;
   cursor: pointer;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .dashboard-analytics-link:hover {
-  background-color: var(--accent-subtle);
-  border-color: var(--accent-border);
-}
-
-/* Hide redundant duplicate streak cards inside embedded Heatmap on Dashboard */
-.dashboard-activity-panel .activity-heatmap-metrics {
-  display: none;
+  background: rgba(249, 115, 22, 0.18);
+  border-color: var(--accent-primary);
+  color: #ffffff;
+  box-shadow: 0 0 12px -2px rgba(249, 115, 22, 0.4);
+  transform: translateY(-1px);
 }
 
 /* =========================================================
@@ -637,17 +651,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-14);
+  margin-bottom: var(--space-16);
 }
 
 .section-title h2 {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-primary);
+  color: var(--text-secondary);
 }
 
 .status-dot {
@@ -659,7 +673,7 @@
 
 .status-dot-active {
   background-color: var(--status-accepted);
-  box-shadow: 0 0 8px 1px rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 8px 1px rgba(16, 185, 129, 0.6);
   animation: status-pulse 2s infinite ease-in-out;
 }
 
@@ -681,14 +695,14 @@
 .active-room-content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-12);
+  gap: var(--space-14);
 }
 
 .active-room-card,
 .recent-room-card {
   text-align: left;
   width: 100%;
-  padding: var(--space-14) var(--space-16);
+  padding: 14px 16px;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   background: var(--bg-primary);
@@ -698,16 +712,19 @@
   transition: all var(--transition-fast);
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .active-room-card {
-  border-color: rgba(16, 185, 129, 0.3);
-  background: linear-gradient(180deg, rgba(16, 185, 129, 0.04) 0%, var(--bg-primary) 100%);
+  border-color: rgba(16, 185, 129, 0.35);
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.06) 0%, rgba(8, 11, 15, 0.95) 100%);
 }
 
 .active-room-card:hover {
   border-color: var(--status-accepted);
-  box-shadow: 0 0 16px -2px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 4px 16px -2px rgba(16, 185, 129, 0.25);
   transform: translateY(-1px);
 }
 
@@ -715,14 +732,13 @@
   border-color: var(--border-strong);
   background-color: var(--bg-elevated);
   transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .active-room-name {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: var(--space-10);
+  color: #ffffff;
   word-break: break-word;
   letter-spacing: -0.01em;
 }
@@ -735,27 +751,27 @@
   gap: var(--space-8);
   font-size: 12px;
   color: var(--text-secondary);
-  margin-bottom: var(--space-8);
 }
 
 .active-room-language,
 .recent-room-language {
   padding: 2px 8px;
   border-radius: var(--radius-xs);
-  background-color: var(--accent-subtle);
-  border: 1px solid var(--accent-border);
+  background-color: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.3);
   color: var(--accent-primary);
   font-size: 11px;
   font-weight: 700;
   font-family: var(--font-mono);
   letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .active-room-participants,
 .recent-room-participants {
   color: var(--text-secondary);
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -772,14 +788,14 @@
 
 .leave-room-btn {
   width: 100%;
-  height: 36px;
+  height: 38px;
   padding: 0 var(--space-12);
-  border: 1px solid var(--status-wrong-border);
+  border: 1px solid rgba(244, 63, 94, 0.35);
   border-radius: var(--radius-sm);
-  background-color: var(--status-wrong-bg);
-  color: var(--status-wrong);
+  background-color: rgba(244, 63, 94, 0.1);
+  color: #fca5a5;
   font-size: 12.5px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
   display: flex;
@@ -789,9 +805,10 @@
 }
 
 .leave-room-btn:hover:not(:disabled) {
-  background-color: rgba(244, 63, 94, 0.22);
+  background-color: rgba(244, 63, 94, 0.2);
   border-color: var(--status-wrong);
-  box-shadow: 0 0 12px -2px rgba(244, 63, 94, 0.3);
+  color: #ffffff;
+  box-shadow: 0 0 14px -2px rgba(244, 63, 94, 0.4);
   transform: translateY(-1px);
 }
 
@@ -824,10 +841,18 @@
   gap: var(--space-10);
 }
 
+.recent-room-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #ffffff;
+  word-break: break-word;
+}
+
 .recent-room-bottom {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-top: 2px;
 }
 
 /* Room Action Buttons */

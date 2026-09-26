@@ -27,6 +27,18 @@
   box-sizing: border-box;
   overflow-x: auto;
   scrollbar-width: none;
+  animation: monaco-toolbar-slide 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes monaco-toolbar-slide {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .monaco-toolbar::-webkit-scrollbar {
@@ -57,6 +69,72 @@
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
+}
+
+/* Features Toggle Button */
+.monaco-features-toggle-btn {
+  background: rgba(249, 115, 22, 0.08);
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  border-radius: var(--radius-xs);
+  padding: 0 10px;
+  height: 26px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: #fb923c;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.monaco-features-toggle-btn:hover {
+  background: rgba(249, 115, 22, 0.18);
+  border-color: var(--accent-primary);
+  color: #ffffff;
+  box-shadow: 0 0 10px -2px rgba(249, 115, 22, 0.4);
+}
+
+.monaco-features-toggle-btn.is-active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: #080b0f;
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.5);
+}
+
+.features-toggle-icon {
+  font-size: 11px;
+}
+
+.features-chevron {
+  font-size: 10px;
+  transition: transform 0.2s ease;
+}
+
+.features-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+/* Features Controls Group */
+.monaco-features-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: features-slide-in 0.2s ease-out;
+}
+
+@keyframes features-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .monaco-select {

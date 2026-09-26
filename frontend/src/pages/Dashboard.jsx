@@ -978,8 +978,8 @@ function Dashboard() {
         <div className="dashboard-activity-panel">
           <div className="dashboard-activity-header">
             <div className="dashboard-activity-title-group">
-              <h3>Submission Activity</h3>
-              <span className="dashboard-activity-subtitle">Last 12 weeks cadence</span>
+              <h3>Submission Activity Cadence</h3>
+              <span className="dashboard-activity-subtitle">Coding consistency, streaks & evaluated solutions</span>
             </div>
             <button
               type="button"
@@ -993,6 +993,8 @@ function Dashboard() {
           <ActivityHeatmap
             activity={analytics?.activity}
             loading={analyticsLoading}
+            weeksToShow={24}
+            showMetrics={false}
           />
         </div>
 

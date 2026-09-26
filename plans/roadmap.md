@@ -18,3 +18,12 @@
 - [x] Task 3.5: Implement Frontend Auth UI (Google OAuth button, Login with Email OTP, Register OTP flow)
 - [x] Task 3.6: Implement Frontend Admin Portal (Admin Dashboard & Rich Problem Editor with Test Case Builder & Markdown Preview)
 - [x] Task 3.7: Automated verification, test suite execution, and comprehensive report generation
+
+## Milestone 4: Autonomous CSS Elevation & Piston Verification (css_plann.md)
+- [x] Task 4.1: Cloud Piston Execution Verification across C++, Python, JS, and Java
+- [x] Task 4.2: Global Design System, Tokens & Favicon Polish (index.css, favicon.svg, title)
+- [x] Task 4.3: High-Impact Landing Page (Home.css) & Auth Pages (Login.css, Signup.css) Elevation
+- [x] Task 4.4: Dashboard & Navigation Visual Elevation (Dashboard.css, cyber-cards, glass-panels)
+- [x] Task 4.5: Problem Workspace & Multiplayer Room IDE Elevation (ProblemWorkspace.css, Room.css)
+- [x] Task 4.6: Admin Studio Elevation (AdminDashboard.css, AdminProblemEditor.css)
+- [x] Task 4.7: Live Visual Verification, Contrast Audit & End-to-End Sanity Test

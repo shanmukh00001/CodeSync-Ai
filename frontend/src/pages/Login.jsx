@@ -125,51 +125,20 @@ function Login() {
         </div>
 
         {/* Auth Mode Toggle */}
-        <div
-          style={{
-            display: "flex",
-            backgroundColor: "#0f172a",
-            borderRadius: "8px",
-            padding: "4px",
-            marginBottom: "16px",
-            border: "1px solid #1e293b",
-          }}
-        >
+        <div className="auth-toggle-group">
           <button
             type="button"
             onClick={() => setAuthMode("password")}
-            style={{
-              flex: 1,
-              padding: "8px",
-              border: "none",
-              borderRadius: "6px",
-              fontSize: "13px",
-              fontWeight: "600",
-              cursor: "pointer",
-              backgroundColor: authMode === "password" ? "#1e293b" : "transparent",
-              color: authMode === "password" ? "#f8fafc" : "#94a3b8",
-              transition: "all 0.2s ease",
-            }}
+            className={`auth-toggle-btn ${authMode === "password" ? "active" : ""}`}
           >
             Password
           </button>
           <button
             type="button"
             onClick={() => setAuthMode("otp")}
-            style={{
-              flex: 1,
-              padding: "8px",
-              border: "none",
-              borderRadius: "6px",
-              fontSize: "13px",
-              fontWeight: "600",
-              cursor: "pointer",
-              backgroundColor: authMode === "otp" ? "#1e293b" : "transparent",
-              color: authMode === "otp" ? "#f8fafc" : "#94a3b8",
-              transition: "all 0.2s ease",
-            }}
+            className={`auth-toggle-btn ${authMode === "otp" ? "active" : ""}`}
           >
-            Magic OTP Pass
+            OTP Verification
           </button>
         </div>
 

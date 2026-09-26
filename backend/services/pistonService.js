@@ -72,9 +72,17 @@ function _sendExecuteRequest(baseUrl, payload) {
         try {
           parsed = JSON.parse(data);
         } catch (parseError) {
+          const isHtml = data.trim().startsWith("<!DOCTYPE") || data.trim().startsWith("<html");
+          if (isHtml) {
+            return reject(
+              new Error(
+                `Piston server at ${baseUrl} returned an HTML error page (HTTP ${res.statusCode}). It may be offline or blocked by your network firewall. Please run 'docker start piston_api'.`
+              )
+            );
+          }
           return reject(
             new Error(
-              `Piston returned invalid JSON response (HTTP ${res.statusCode}): ${data.slice(0, 200)}`
+              `Piston returned invalid JSON response (HTTP ${res.statusCode}): ${data.slice(0, 150)}`
             )
           );
         }
@@ -169,17 +177,27 @@ async function executeCode({
   }
 
   const primaryUrl = getPistonBaseUrl();
-  return _sendExecuteRequest(primaryUrl, payload);
+  try {
+    return await _sendExecuteRequest(primaryUrl, payload);
+  } catch (primaryErr) {
+    // If primary failed and is not local Piston, attempt fallback to local Piston container
+    if (!primaryUrl.includes("127.0.0.1") && !primaryUrl.includes("localhost")) {
+      try {
+        return await _sendExecuteRequest(DEFAULT_LOCAL_PISTON_URL, payload);
+      } catch {
+        // Propagate the original error if fallback also failed
+        throw primaryErr;
+      }
+    }
+    throw primaryErr;
+  }
 }
 
 /**
- * Checks connectivity and retrieves available runtimes from Piston.
- * 
- * @returns {Promise<Array<Object>>}
+ * Internal helper to fetch runtimes from a specific base URL.
  */
-async function getRuntimes() {
-  const primaryUrl = getPistonBaseUrl();
-  const url = buildPistonUrl(primaryUrl, "/runtimes");
+function _fetchRuntimes(baseUrl) {
+  const url = buildPistonUrl(baseUrl, "/runtimes");
   const isHttps = url.protocol === "https:";
   const client = isHttps ? https : http;
 
@@ -212,16 +230,37 @@ async function getRuntimes() {
     );
 
     req.on("error", (err) => {
-      reject(new Error(`Failed to reach Piston at ${primaryUrl}: ${err.message}`));
+      reject(new Error(`Failed to reach Piston at ${baseUrl}: ${err.message}`));
     });
 
     req.on("timeout", () => {
       req.destroy();
-      reject(new Error(`Timed out connecting to Piston at ${primaryUrl}`));
+      reject(new Error(`Timed out connecting to Piston at ${baseUrl}`));
     });
 
     req.end();
   });
+}
+
+/**
+ * Checks connectivity and retrieves available runtimes from Piston with automatic fallback.
+ * 
+ * @returns {Promise<Array<Object>>}
+ */
+async function getRuntimes() {
+  const primaryUrl = getPistonBaseUrl();
+  try {
+    return await _fetchRuntimes(primaryUrl);
+  } catch (primaryErr) {
+    if (!primaryUrl.includes("127.0.0.1") && !primaryUrl.includes("localhost")) {
+      try {
+        return await _fetchRuntimes(DEFAULT_LOCAL_PISTON_URL);
+      } catch {
+        throw primaryErr;
+      }
+    }
+    throw primaryErr;
+  }
 }
 
 module.exports = {

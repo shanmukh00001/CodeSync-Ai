@@ -4,27 +4,30 @@
    ========================================================= */
 
 .zebra-chase-widget {
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  background-color: var(--bg-surface);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: var(--radius-lg);
+  background: rgba(15, 20, 28, 0.95);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-  transition: border-color var(--transition-fast);
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.6), 0 0 16px -2px rgba(249, 115, 22, 0.08);
+  transition: all var(--transition-fast);
 }
 
 .zebra-chase-widget:hover {
-  border-color: var(--border-strong);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.7), 0 0 24px -2px rgba(249, 115, 22, 0.15);
 }
 
 .zebra-chase-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-10) var(--space-14);
-  background-color: var(--bg-elevated);
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 12px 16px;
+  background-color: rgba(22, 30, 40, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .zebra-chase-title-group {
@@ -35,25 +38,27 @@
 
 .zebra-icon-pill {
   font-size: 13px;
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-default);
-  padding: 3px 6px;
-  border-radius: var(--radius-xs);
+  background-color: rgba(8, 11, 15, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
   user-select: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 .zebra-widget-title {
   margin: 0;
-  font-size: 12.5px;
+  font-size: 13.5px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #ffffff;
   letter-spacing: -0.01em;
 }
 
 .zebra-widget-sub {
-  font-size: 10.5px;
-  color: var(--text-muted);
+  font-size: 11px;
+  color: var(--text-secondary);
   display: block;
+  margin-top: 1px;
 }
 
 .zebra-stats-pill {
@@ -63,36 +68,37 @@
 
 .zebra-potd-badge {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 700;
-  padding: 3px 8px;
+  padding: 4px 10px;
   border-radius: var(--radius-full);
   letter-spacing: 0.02em;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   transition: all var(--transition-fast);
 }
 
 .zebra-potd-badge.potd-done {
-  color: var(--status-accepted);
-  background-color: var(--status-accepted-bg);
-  border: 1px solid var(--status-accepted-border);
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  background-color: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
 }
 
 .zebra-potd-badge.potd-pending {
   color: #fbbf24;
   background-color: rgba(251, 191, 36, 0.12);
-  border: 1px solid rgba(251, 191, 36, 0.3);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.15);
 }
 
 /* Canvas Area */
 .zebra-canvas-wrapper {
   position: relative;
   width: 100%;
-  height: 110px;
-  background-color: #080c10;
+  height: 120px;
+  background-color: #06090e;
   overflow: hidden;
 }
 
@@ -106,14 +112,14 @@
   position: absolute;
   top: 10px;
   right: 12px;
-  background: linear-gradient(135deg, #ff7e35, #ea580c);
+  background: linear-gradient(135deg, #ff7e35 0%, #ea580c 100%);
   color: #ffffff;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 800;
-  padding: 3px 8px;
-  border-radius: var(--radius-xs);
-  box-shadow: 0 4px 12px rgba(255, 126, 53, 0.4);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgba(255, 126, 53, 0.5);
   animation: zebra-burst-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -130,81 +136,86 @@
 
 /* Footer & Controls */
 .zebra-chase-footer {
-  padding: var(--space-10) var(--space-14);
-  background-color: var(--bg-surface);
+  padding: 12px 16px 14px;
+  background-color: rgba(15, 20, 28, 0.95);
   display: flex;
   flex-direction: column;
-  gap: var(--space-10);
-  border-top: 1px solid var(--border-subtle);
+  gap: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .zebra-boost-bar-wrap {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 
 .zebra-boost-label {
   display: flex;
   justify-content: space-between;
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 700;
   color: var(--text-muted);
+  letter-spacing: 0.04em;
 }
 
 .zebra-boost-track {
-  height: 4px;
-  background-color: var(--bg-primary);
-  border-radius: 2px;
+  height: 5px;
+  background-color: #080b0f;
+  border-radius: 3px;
   overflow: hidden;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .zebra-boost-fill {
   height: 100%;
-  background: linear-gradient(90deg, #ff7e35, #fb923c);
-  border-radius: 2px;
+  background: linear-gradient(90deg, #f97316 0%, #fb923c 100%);
+  border-radius: 3px;
+  box-shadow: 0 0 8px rgba(249, 115, 22, 0.6);
   transition: width 0.3s ease, background 0.3s ease;
 }
 
 .zebra-boost-fill.is-low {
-  background: #64748b;
+  background: #475569;
+  box-shadow: none;
 }
 
 .zebra-actions-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-8);
+  gap: 10px;
 }
 
 .zebra-boost-btn {
-  height: 30px;
+  height: 34px;
   padding: 0 var(--space-10);
-  border-radius: var(--radius-xs);
-  border: 1px solid var(--accent-border);
-  background-color: var(--accent-subtle);
-  color: var(--accent-primary);
-  font-size: 11px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  background-color: rgba(249, 115, 22, 0.12);
+  color: #fb923c;
+  font-size: 11.5px;
   font-weight: 700;
   cursor: pointer;
   transition: all var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .zebra-boost-btn:hover:not(:disabled) {
-  background-color: rgba(255, 126, 53, 0.22);
+  background-color: rgba(249, 115, 22, 0.22);
   border-color: var(--accent-primary);
+  color: #ffffff;
+  box-shadow: 0 0 14px -2px rgba(249, 115, 22, 0.4);
   transform: translateY(-1px);
 }
 
 .zebra-boost-btn.is-active {
-  background-color: var(--accent-primary);
-  color: var(--text-inverse);
-  box-shadow: 0 0 12px rgba(255, 126, 53, 0.4);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, #ea580c 100%);
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.6);
 }
 
 .zebra-boost-btn:disabled {
@@ -216,23 +227,26 @@
 }
 
 .zebra-practice-btn {
-  height: 30px;
+  height: 34px;
   padding: 0 var(--space-10);
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-default);
   background-color: var(--bg-elevated);
   color: var(--text-primary);
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
 }
 
 .zebra-practice-btn:hover {
   background-color: var(--bg-subtle);
-  border-color: var(--border-strong);
-  color: var(--accent-primary);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }

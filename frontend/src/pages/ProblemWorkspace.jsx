@@ -75,6 +75,7 @@ function ProblemWorkspace() {
   // Loading & Error states
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showFeatures, setShowFeatures] = useState(false);
 
   // ---------------- Resizable panels state ----------------
   // Fraction (0-1) of the workspace width occupied by the problem (left) panel.
@@ -1133,6 +1134,16 @@ function ProblemWorkspace() {
           <div className="toolbar-right">
             <button
               type="button"
+              className={`btn btn-features ${showFeatures ? "is-active" : ""}`}
+              onClick={() => setShowFeatures((prev) => !prev)}
+              aria-expanded={showFeatures}
+              aria-label="Toggle editor features and settings"
+              title="Toggle editor features (Themes, Font size, Word wrap, Format, etc.)"
+            >
+              ⚡ Features {showFeatures ? "▲" : "▼"}
+            </button>
+            <button
+              type="button"
               className="btn btn-save"
               onClick={handleSaveCode}
               aria-label="Save code draft locally (Ctrl+S)"
@@ -1210,7 +1221,7 @@ function ProblemWorkspace() {
             onReset={handleResetCode}
             showLangBadge={false}
             placeholder={`Write your ${selectedLanguage.toUpperCase()} solution here...`}
-            showToolbar={true}
+            showToolbar={showFeatures}
           />
         </div>
 
@@ -1242,7 +1253,7 @@ function ProblemWorkspace() {
               aria-label={isOutputCollapsed ? "Expand output panel" : "Collapse output panel"}
               title={isOutputCollapsed ? "Expand output panel" : "Collapse output panel"}
             >
-              {isOutputCollapsed ? "[Expand]" : "[Collapse]"}
+              {isOutputCollapsed ? "▲ Expand" : "▼ Collapse"}
             </button>
           </div>
           {!isOutputCollapsed && (

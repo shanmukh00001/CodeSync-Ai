@@ -149,6 +149,7 @@ function Room() {
   // ================= LAYOUT =================
   const [layout, setLayout] = useRoomLayout();
   const containerRef = useRef(null);
+  const editorPanelRef = useRef(null);
   const codeSaveTimerRef = useRef(null);
   const lastSavedCodeRef = useRef("");
   const lastSelectedProblemIdRef = useRef(null);
@@ -1270,42 +1271,120 @@ function Room() {
   };
 
   /* Resizers */
-  const problemWidthDrag = useDrag({
-    axis: "x",
-    onMove: (delta) => {
-      setLayout((prev) => {
-        const [problemW] = prev.horizontal;
-        const containerWidth = containerRef.current?.clientWidth || 0;
-        if (!containerWidth) return prev;
-        const maxProblem = containerWidth - MIN_EDITOR - 8;
-        const newProblem = Math.min(
-          Math.max(problemW + delta, MIN_PROBLEM),
-          Math.max(MIN_PROBLEM, maxProblem)
-        );
-        return { ...prev, horizontal: [newProblem] };
-      });
-    },
-  });
+  const problemWidthDrag = {
+    handlePointerDown: (e) => {
+      if (e.button !== undefined && e.button !== 0) return;
+      e.preventDefault();
 
-  const outputHeightDrag = useDrag({
-    axis: "y",
-    onMove: (delta) => {
-      setLayout((prev) => {
-        const totalHeight = containerRef.current?.clientHeight || 0;
-        if (!totalHeight) return prev;
-        const maxOutputPercentage = Math.floor(totalHeight * 0.6);
-        const maxOutputBounded = Math.max(
-          MIN_OUTPUT,
-          Math.min(maxOutputPercentage, totalHeight - MIN_EDITOR_HEIGHT)
+      const pointerId = e.pointerId;
+      const target = e.currentTarget;
+      try {
+        if (target && pointerId !== undefined) {
+          target.setPointerCapture(pointerId);
+        }
+      } catch {
+        // Ignore capture error
+      }
+
+      document.body.classList.add("room-dragging");
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+
+      const handlePointerMove = (ev) => {
+        const container = containerRef.current;
+        if (!container) return;
+        const rect = container.getBoundingClientRect();
+        const rawWidth = ev.clientX - rect.left;
+        const maxProblem = Math.max(MIN_PROBLEM, rect.width - MIN_EDITOR - 8);
+        const clamped = Math.min(
+          maxProblem,
+          Math.max(MIN_PROBLEM, rawWidth)
         );
-        const newOutputHeight = Math.min(
-          Math.max(prev.outputHeight - delta, MIN_OUTPUT),
-          maxOutputBounded
-        );
-        return { ...prev, outputHeight: newOutputHeight };
-      });
+        setLayout((prev) => ({
+          ...prev,
+          horizontal: [clamped],
+        }));
+      };
+
+      const handlePointerUp = (ev) => {
+        try {
+          if (target && pointerId !== undefined) {
+            target.releasePointerCapture(pointerId);
+          }
+        } catch {
+          // Ignore
+        }
+        window.removeEventListener("pointermove", handlePointerMove);
+        window.removeEventListener("pointerup", handlePointerUp);
+        window.removeEventListener("pointercancel", handlePointerUp);
+        document.body.classList.remove("room-dragging");
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      };
+
+      window.addEventListener("pointermove", handlePointerMove);
+      window.addEventListener("pointerup", handlePointerUp);
+      window.addEventListener("pointercancel", handlePointerUp);
     },
-  });
+  };
+
+  const outputHeightDrag = {
+    handlePointerDown: (e) => {
+      if (e.button !== undefined && e.button !== 0) return;
+      e.preventDefault();
+
+      const pointerId = e.pointerId;
+      const target = e.currentTarget;
+      try {
+        if (target && pointerId !== undefined) {
+          target.setPointerCapture(pointerId);
+        }
+      } catch {
+        // Ignore capture error
+      }
+
+      document.body.classList.add("room-dragging");
+      document.body.style.cursor = "row-resize";
+      document.body.style.userSelect = "none";
+
+      const handlePointerMove = (ev) => {
+        const panel = editorPanelRef.current;
+        if (!panel) return;
+        const rect = panel.getBoundingClientRect();
+        const panelBottom = rect.bottom;
+        const rawHeight = panelBottom - ev.clientY;
+        const maxHeight = Math.max(MIN_OUTPUT, rect.height - MIN_EDITOR_HEIGHT);
+        const clamped = Math.min(
+          maxHeight,
+          Math.max(MIN_OUTPUT, rawHeight)
+        );
+        setLayout((prev) => ({
+          ...prev,
+          outputHeight: clamped,
+        }));
+      };
+
+      const handlePointerUp = (ev) => {
+        try {
+          if (target && pointerId !== undefined) {
+            target.releasePointerCapture(pointerId);
+          }
+        } catch {
+          // Ignore
+        }
+        window.removeEventListener("pointermove", handlePointerMove);
+        window.removeEventListener("pointerup", handlePointerUp);
+        window.removeEventListener("pointercancel", handlePointerUp);
+        document.body.classList.remove("room-dragging");
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      };
+
+      window.addEventListener("pointermove", handlePointerMove);
+      window.addEventListener("pointerup", handlePointerUp);
+      window.addEventListener("pointercancel", handlePointerUp);
+    },
+  };
 
   const discussionWidthDrag = useDrag({
     axis: "x",
@@ -1450,6 +1529,7 @@ function Room() {
         {/* Vertical Resizer Divider */}
         <div
           className="room-resizer room-resizer-vertical"
+          onPointerDown={problemWidthDrag.handlePointerDown}
           onMouseDown={problemWidthDrag.handlePointerDown}
           role="separator"
           aria-orientation="vertical"
@@ -1459,8 +1539,9 @@ function Room() {
           <span className="room-resizer-grip" aria-hidden="true" />
         </div>
 
-        {/* Editor & Output Panel */}
+        {/* Editor & Output Panel — collab controls inline in output header */}
         <RoomEditorPanel
+          editorPanelRef={editorPanelRef}
           room={room}
           code={code}
           onCodeChange={handleEditorCodeChange}
@@ -1481,36 +1562,29 @@ function Room() {
           onResetCode={handleResetCode}
           onCursorChange={emitCursorUpdate}
           remoteCursors={remoteCursors}
-          outputHeight={layout.outputHeight}
           outputCollapsed={outputCollapsed}
           onToggleOutputCollapse={() => setOutputCollapsed((prev) => !prev)}
-          outputHeightDrag={outputHeightDrag}
           output={output}
           lastExecutionStatus={lastExecutionStatus}
+          linkCopied={linkCopied}
+          onCopyLink={handleCopyLink}
+          participantsOpen={participantsOpen}
+          onToggleParticipants={() => setParticipantsOpen((v) => !v)}
+          onCloseParticipants={() => setParticipantsOpen(false)}
+          participantsCount={participantsCount}
+          currentUserId={currentUserId}
+          user={user}
+          discussionOpen={discussionOpen}
+          onToggleDiscussion={() => {
+            setDiscussionOpen((v) => {
+              const next = !v;
+              if (next) setHasUnreadDiscussion(false);
+              return next;
+            });
+          }}
+          hasUnreadDiscussion={hasUnreadDiscussion}
         />
       </div>
-
-      {/* Bottom Collaboration Bar */}
-      <RoomCollabBar
-        linkCopied={linkCopied}
-        onCopyLink={handleCopyLink}
-        participantsOpen={participantsOpen}
-        onToggleParticipants={() => setParticipantsOpen((v) => !v)}
-        onCloseParticipants={() => setParticipantsOpen(false)}
-        participantsCount={participantsCount}
-        room={room}
-        currentUserId={currentUserId}
-        user={user}
-        discussionOpen={discussionOpen}
-        onToggleDiscussion={() => {
-          setDiscussionOpen((v) => {
-            const next = !v;
-            if (next) setHasUnreadDiscussion(false);
-            return next;
-          });
-        }}
-        hasUnreadDiscussion={hasUnreadDiscussion}
-      />
 
       {/* Technical Discussion Side Drawer */}
       <RoomDiscussionDrawer

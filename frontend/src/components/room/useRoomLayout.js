@@ -24,7 +24,7 @@ export const loadLayout = () => {
     }
 
     const outputHeight =
-      typeof parsed.outputHeight === "number"
+      typeof parsed.outputHeight === "number" && parsed.outputHeight >= 100
         ? parsed.outputHeight
         : DEFAULT_LAYOUT.outputHeight;
 
@@ -60,6 +60,10 @@ export function useResizableLayout() {
 export const useRoomLayout = useResizableLayout;
 
 export function useDrag({ axis, onMove, onDragEnd }) {
+  const onMoveRef = useRef(onMove);
+  onMoveRef.current = onMove;
+  const onDragEndRef = useRef(onDragEnd);
+  onDragEndRef.current = onDragEnd;
   const stateRef = useRef(null);
 
   const handlePointerDown = useCallback(
@@ -67,33 +71,61 @@ export function useDrag({ axis, onMove, onDragEnd }) {
       if (e.button !== undefined && e.button !== 0) return;
       e.preventDefault();
 
+      const pointerId = e.pointerId;
+      const target = e.currentTarget;
+
       stateRef.current = {
         startCoord: axis === "x" ? e.clientX : e.clientY,
+        pointerId,
+        target,
       };
 
-      const handleMove = (ev) => {
+      try {
+        if (target && pointerId !== undefined) {
+          target.setPointerCapture(pointerId);
+        }
+      } catch {
+        // Ignore capture failure in environments that don't support it
+      }
+
+      document.body.classList.add("room-dragging");
+      document.body.style.cursor = axis === "x" ? "col-resize" : "row-resize";
+      document.body.style.userSelect = "none";
+
+      const handlePointerMove = (ev) => {
         if (!stateRef.current) return;
         const coord = axis === "x" ? ev.clientX : ev.clientY;
         const delta = coord - stateRef.current.startCoord;
         stateRef.current.startCoord = coord;
-        onMove(delta);
+        if (onMoveRef.current) {
+          onMoveRef.current(delta);
+        }
       };
 
-      const handleUp = () => {
+      const handlePointerUp = (ev) => {
+        if (!stateRef.current) return;
+        try {
+          if (stateRef.current.target && stateRef.current.pointerId !== undefined) {
+            stateRef.current.target.releasePointerCapture(stateRef.current.pointerId);
+          }
+        } catch {
+          // Ignore release failure
+        }
         stateRef.current = null;
-        window.removeEventListener("mousemove", handleMove);
-        window.removeEventListener("mouseup", handleUp);
+        window.removeEventListener("pointermove", handlePointerMove);
+        window.removeEventListener("pointerup", handlePointerUp);
+        window.removeEventListener("pointercancel", handlePointerUp);
+        document.body.classList.remove("room-dragging");
         document.body.style.cursor = "";
         document.body.style.userSelect = "";
-        if (onDragEnd) onDragEnd();
+        if (onDragEndRef.current) onDragEndRef.current();
       };
 
-      window.addEventListener("mousemove", handleMove);
-      window.addEventListener("mouseup", handleUp);
-      document.body.style.cursor = axis === "x" ? "col-resize" : "row-resize";
-      document.body.style.userSelect = "none";
+      window.addEventListener("pointermove", handlePointerMove);
+      window.addEventListener("pointerup", handlePointerUp);
+      window.addEventListener("pointercancel", handlePointerUp);
     },
-    [axis, onMove, onDragEnd]
+    [axis]
   );
 
   return { handlePointerDown };
