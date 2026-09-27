@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Problem = require("../models/Problem");
 const Submission = require("../models/Submission");
 
 /**
@@ -167,48 +168,80 @@ async function getUserAnalytics(userId, referenceDate = new Date()) {
 
   const tagCountMap = new Map();
 
-  if (Array.isArray(user.solvedProblems)) {
-    for (const item of user.solvedProblems) {
-      const problem = item.problem;
-      if (!problem || !problem._id) {
-        // Skip orphaned or deleted problem references
-        continue;
-      }
+  const processProblemDoc = (problem) => {
+    if (!problem || !problem._id) return;
+    const problemIdStr = String(problem._id);
+    if (seenProblemIds.has(problemIdStr)) return;
+    seenProblemIds.add(problemIdStr);
 
-      const problemIdStr = String(problem._id);
-      if (seenProblemIds.has(problemIdStr)) {
-        // Skip duplicate solved problem records
-        continue;
-      }
-      seenProblemIds.add(problemIdStr);
+    solved.totalSolved++;
 
-      solved.totalSolved++;
+    if (problem.difficulty === "Easy") {
+      solved.easy++;
+    } else if (problem.difficulty === "Medium") {
+      solved.medium++;
+    } else if (problem.difficulty === "Hard") {
+      solved.hard++;
+    }
 
-      if (problem.difficulty === "Easy") {
-        solved.easy++;
-      } else if (problem.difficulty === "Medium") {
-        solved.medium++;
-      } else if (problem.difficulty === "Hard") {
-        solved.hard++;
-      }
-
-      // Aggregate tags for this unique solved problem
-      if (Array.isArray(problem.tags)) {
-        const problemTagSet = new Set();
-        for (const tag of problem.tags) {
-          if (typeof tag === "string") {
-            const trimmed = tag.trim();
-            if (trimmed.length > 0) {
-              problemTagSet.add(trimmed);
-            }
+    if (Array.isArray(problem.tags)) {
+      const problemTagSet = new Set();
+      for (const tag of problem.tags) {
+        if (typeof tag === "string") {
+          const trimmed = tag.trim();
+          if (trimmed.length > 0) {
+            problemTagSet.add(trimmed);
           }
         }
+      }
 
-        for (const cleanTag of problemTagSet) {
-          tagCountMap.set(cleanTag, (tagCountMap.get(cleanTag) || 0) + 1);
-        }
+      for (const cleanTag of problemTagSet) {
+        tagCountMap.set(cleanTag, (tagCountMap.get(cleanTag) || 0) + 1);
       }
     }
+  };
+
+  if (Array.isArray(user.solvedProblems)) {
+    for (const item of user.solvedProblems) {
+      processProblemDoc(item?.problem);
+    }
+  }
+
+  // Self-heal: ensure all individual (non-room) Accepted submissions are accounted for
+  try {
+    const acceptedProblemIds = await Submission.find({
+      user: userId,
+      status: "Accepted",
+      room: null,
+    }).distinct("problem");
+
+    const missingProblemIds = acceptedProblemIds.filter(
+      (pId) => pId && !seenProblemIds.has(String(pId))
+    );
+
+    if (missingProblemIds.length > 0) {
+      const missingDocs = await Problem.find({
+        _id: { $in: missingProblemIds },
+      }).select("title difficulty tags").lean();
+
+      for (const doc of missingDocs) {
+        processProblemDoc(doc);
+      }
+
+      // Asynchronously heal User.solvedProblems
+      User.findByIdAndUpdate(userId, {
+        $addToSet: {
+          solvedProblems: {
+            $each: missingDocs.map((doc) => ({
+              problem: doc._id,
+              solvedAt: new Date(),
+            })),
+          },
+        },
+      }).catch((syncErr) => console.error("Self-heal User.solvedProblems failed:", syncErr));
+    }
+  } catch (syncCheckErr) {
+    console.error("Self-heal sync check failed:", syncCheckErr);
   }
 
   // Sort topics: 1. solvedCount descending, 2. tag alphabetical ascending

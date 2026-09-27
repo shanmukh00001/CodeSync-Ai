@@ -10,6 +10,8 @@ const { AppError } = require("../middleware/errorMiddleware");
 const { issueUserOtp, verifyUserOtp } = require("../services/otpService");
 const User = require("../models/User");
 const Room = require("../models/Room");
+const Problem = require("../models/Problem");
+const Submission = require("../models/Submission");
 
 
 const router=express.Router();
@@ -445,6 +447,55 @@ router.get("/solved-problems", protect, async (req, res, next) => {
                 tags: item.problem.tags || [],
                 solvedAt: item.solvedAt
             }));
+
+        // Self-heal: ensure all individual (non-room) Accepted submissions are accounted for
+        try {
+            const acceptedProblemIds = await Submission.find({
+                user: req.userId,
+                status: "Accepted",
+                room: null,
+            }).distinct("problem");
+
+            const seenSolvedSet = new Set(validSolved.map((p) => String(p._id)));
+            const missingProblemIds = acceptedProblemIds.filter(
+                (pId) => pId && !seenSolvedSet.has(String(pId))
+            );
+
+            if (missingProblemIds.length > 0) {
+                const missingDocs = await Problem.find({
+                    _id: { $in: missingProblemIds },
+                }).select("_id title slug difficulty tags").lean();
+
+                for (const doc of missingDocs) {
+                    validSolved.push({
+                        _id: doc._id,
+                        title: doc.title,
+                        slug: doc.slug,
+                        difficulty: doc.difficulty,
+                        tags: doc.tags || [],
+                        solvedAt: new Date(),
+                    });
+                    seenSolvedSet.add(String(doc._id));
+                }
+
+                // Re-sort after adding missing docs
+                validSolved.sort((a, b) => new Date(b.solvedAt || 0) - new Date(a.solvedAt || 0));
+
+                // Asynchronously heal User.solvedProblems
+                User.findByIdAndUpdate(req.userId, {
+                    $addToSet: {
+                        solvedProblems: {
+                            $each: missingDocs.map((doc) => ({
+                                problem: doc._id,
+                                solvedAt: new Date(),
+                            })),
+                        },
+                    },
+                }).catch((syncErr) => console.error("Self-heal User.solvedProblems failed:", syncErr));
+            }
+        } catch (syncCheckErr) {
+            console.error("Self-heal sync check failed:", syncCheckErr);
+        }
 
         // Calculate statistics for profile cards
         const stats = {

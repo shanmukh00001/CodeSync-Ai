@@ -32,11 +32,11 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const path = require("path");
 
-dotenv.config({ path: path.join(__dirname, ".env") });
+dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
-const User = require("./models/User");
-const Problem = require("./models/Problem");
-const Submission = require("./models/Submission");
+const User = require("../models/User");
+const Problem = require("../models/Problem");
+const Submission = require("../models/Submission");
 const {
   getUserAnalytics,
   calculateStreaks,
@@ -45,7 +45,7 @@ const {
   isValidMemory,
   toUtcDateString,
   stepPreviousUtcDay,
-} = require("./services/analyticsService");
+} = require("../services/analyticsService");
 
 let passedCount = 0;
 let failedCount = 0;

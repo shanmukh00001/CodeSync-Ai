@@ -11,11 +11,9 @@ const seedProblems = async () => {
 
     console.log("MongoDB connected");
 
-    // Prevent duplicate seed data
-    await Problem.deleteMany({});
-
     const problems = [
       {
+        _id: new mongoose.Types.ObjectId("6a99c395c9a82298081d7a14"),
         title: "Two Sum",
         slug: "two-sum",
         description:
@@ -153,6 +151,7 @@ public:
         ]
       },
       {
+        _id: new mongoose.Types.ObjectId("6a99c395c9a82298081d7a15"),
         title: "Valid Palindrome",
         slug: "valid-palindrome",
         description:
@@ -271,6 +270,7 @@ public:
         ]
       },
       {
+        _id: new mongoose.Types.ObjectId("6a99c395c9a82298081d7a16"),
         title: "Longest Unique Substring",
         slug: "longest-unique-substring",
         difficulty: "Medium",
@@ -375,6 +375,7 @@ public:
         ]
       },
       {
+        _id: new mongoose.Types.ObjectId("6a99c395c9a82298081d7a17"),
         title: "Group Anagrams",
         slug: "group-anagrams",
         difficulty: "Medium",
@@ -490,6 +491,7 @@ public:
         ]
       },
       {
+        _id: new mongoose.Types.ObjectId("6a99c395c9a82298081d7a18"),
         title: "Trapping Rain Water",
         slug: "trapping-rain-water",
         difficulty: "Hard",
@@ -601,6 +603,7 @@ public:
         ]
       },
       {
+        _id: new mongoose.Types.ObjectId("6a99c395c9a82298081d7a19"),
         title: "Median of Two Sorted Arrays",
         slug: "median-of-two-sorted-arrays",
         difficulty: "Hard",
@@ -3090,9 +3093,17 @@ public:
       }
     ];
 
-    await Problem.insertMany(problems);
+    for (const p of problems) {
+      const existing = await Problem.findOne({ slug: p.slug });
+      if (existing) {
+        const { _id, ...updateData } = p;
+        await Problem.updateOne({ _id: existing._id }, { $set: updateData });
+      } else {
+        await Problem.create(p);
+      }
+    }
 
-    console.log("Problems seeded successfully");
+    console.log("Problems seeded successfully (upserted without breaking references)");
 
     await mongoose.connection.close();
 
