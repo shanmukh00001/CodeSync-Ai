@@ -28,6 +28,7 @@ function Dashboard() {
   const [search, setSearch] = useState("");
 
   const [difficulty, setDifficulty] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
 
   // Personal Analytics State
   const [analytics, setAnalytics] = useState(null);
@@ -461,7 +462,13 @@ function Dashboard() {
       difficulty === "All" ||
       problem.difficulty === difficulty;
 
-    return matchesSearch && matchesDifficulty;
+    const isSolved = solvedProblemIds.has(String(problem._id));
+    const matchesStatus =
+      statusFilter === "All" ||
+      (statusFilter === "Solved" && isSolved) ||
+      (statusFilter === "Unsolved" && !isSolved);
+
+    return matchesSearch && matchesDifficulty && matchesStatus;
   });
 
   return (
@@ -633,7 +640,12 @@ function Dashboard() {
 
           <div className="problems-header">
             <div>
-              <h2>Problems</h2>
+              <div className="problems-title-row">
+                <h2>Problems</h2>
+                <span className="problems-count-badge" title="Matching problems">
+                  {filteredProblems.length} {filteredProblems.length === 1 ? "problem" : "problems"}
+                </span>
+              </div>
               <p className="problems-subtitle">
                 Practice and solve coding challenges
               </p>
@@ -641,35 +653,87 @@ function Dashboard() {
 
             <div className="problem-filters">
 
-              {/* Search */}
-              <input
-                type="text"
-                placeholder="Search problems..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+              {/* Search with icon & clear */}
+              <div className="search-input-wrapper">
+                <svg
+                  className="search-icon"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search problems..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="search-input"
+                  aria-label="Search problems by name"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    className="clear-search-btn"
+                    onClick={() => setSearch("")}
+                    aria-label="Clear search"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+
+              {/* Status filter (Solved / Unsolved) */}
+              <div className={`filter-select-wrapper ${statusFilter !== "All" ? "filter-active" : ""}`}>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="filter-select"
+                  aria-label="Filter by solved status"
+                >
+                  <option value="All">All Status</option>
+                  <option value="Solved">✓ Solved</option>
+                  <option value="Unsolved">○ Unsolved</option>
+                </select>
+              </div>
 
               {/* Difficulty filter */}
-              <select
-                value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value)}
-              >
-                <option value="All">
-                  All Difficulties
-                </option>
+              <div className={`filter-select-wrapper ${difficulty !== "All" ? "filter-active" : ""}`}>
+                <select
+                  value={difficulty}
+                  onChange={(e) => setDifficulty(e.target.value)}
+                  className="filter-select"
+                  aria-label="Filter by difficulty"
+                >
+                  <option value="All">All Difficulties</option>
+                  <option value="Easy">Easy</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Hard">Hard</option>
+                </select>
+              </div>
 
-                <option value="Easy">
-                  Easy
-                </option>
-
-                <option value="Medium">
-                  Medium
-                </option>
-
-                <option value="Hard">
-                  Hard
-                </option>
-              </select>
+              {/* Reset filters button if any active */}
+              {(statusFilter !== "All" || difficulty !== "All" || search.trim() !== "") && (
+                <button
+                  type="button"
+                  className="reset-filters-btn"
+                  onClick={() => {
+                    setStatusFilter("All");
+                    setDifficulty("All");
+                    setSearch("");
+                  }}
+                  title="Reset all filters"
+                >
+                  Reset
+                </button>
+              )}
 
             </div>
           </div>
