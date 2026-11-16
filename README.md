@@ -6,7 +6,7 @@
 [![GitHub Repo](https://img.shields.io/badge/GitHub-CodeSync--Ai-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/shanmukh00001/CodeSync-Ai)
 [![Node.js Version](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
 [![React 19](https://img.shields.io/badge/React-19.x-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
+
 
 <br/>
 
