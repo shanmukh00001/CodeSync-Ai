@@ -1,0 +1,235 @@
+/* =========================================================
+   CODESYNC AI — FULL PAGE LOADING SCREEN
+   Obsidian Atmosphere + Safety Orange / Growth Cyan Pulse
+   Linear/Vercel High-Tech Industrial Design
+   ========================================================= */
+
+.codesync-loader-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at 50% 40%, rgba(249, 115, 22, 0.06), transparent 50%),
+              radial-gradient(circle at 50% 60%, rgba(6, 182, 212, 0.04), transparent 60%),
+              #080b0f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #f8fafc;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Subtle background cyber grid */
+.codesync-loader-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.8), transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.8), transparent 75%);
+}
+
+.codesync-loader-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 440px;
+  padding: 32px;
+  z-index: 1;
+}
+
+/* Brand Emblem with Rotating Orbit */
+.codesync-loader-emblem {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.codesync-loader-orbit {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.05);
+  border-top-color: #f97316;
+  border-right-color: #06b6d4;
+  animation: codesync-spin 1.4s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+  box-shadow: 0 0 20px -3px rgba(249, 115, 22, 0.25);
+}
+
+.codesync-loader-orbit-inner {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  animation: codesync-spin-reverse 3s linear infinite;
+}
+
+.codesync-loader-badge {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #161e28 0%, #0f141c 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: -0.5px;
+  color: #f8fafc;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: codesync-pulse-glow 2s ease-in-out infinite;
+}
+
+.codesync-loader-badge span {
+  background: linear-gradient(135deg, #f97316 20%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Typography & Titles */
+.codesync-loader-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #f8fafc;
+  margin: 0 0 6px 0;
+}
+
+.codesync-loader-subtitle {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  margin: 0 0 24px 0;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Linear Cyber Progress Bar */
+.codesync-loader-bar-wrap {
+  width: 220px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.codesync-loader-bar-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 50%;
+  background: linear-gradient(90deg, transparent, #f97316, #06b6d4, transparent);
+  border-radius: 999px;
+  animation: codesync-indeterminate-bar 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Cold-Start Notice (renders if backend takes > 3.5s to wake up) */
+.codesync-loader-coldstart {
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: #fcd34d;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.4;
+  animation: codesync-fade-in 0.4s ease-out forwards;
+}
+
+.codesync-loader-coldstart-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  animation: codesync-bounce 1s ease infinite;
+}
+
+.codesync-loader-refresh-btn {
+  margin-top: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-family: 'IBM Plex Mono', monospace;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.codesync-loader-refresh-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Animations */
+@keyframes codesync-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes codesync-spin-reverse {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes codesync-pulse-glow {
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 12px rgba(249, 115, 22, 0.2);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 24px rgba(6, 182, 212, 0.35);
+  }
+}
+
+@keyframes codesync-indeterminate-bar {
+  0% {
+    left: -50%;
+    width: 30%;
+  }
+  50% {
+    left: 25%;
+    width: 60%;
+  }
+  100% {
+    left: 100%;
+    width: 30%;
+  }
+}
+
+@keyframes codesync-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes codesync-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}

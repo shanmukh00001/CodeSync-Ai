@@ -1,6 +1,7 @@
 import { useContext } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import LoadingScreen from "./common/LoadingScreen";
 
 export default function AdminRoute({ children }) {
   const { user, isAdmin, loading } = useContext(AuthContext);
@@ -8,17 +9,10 @@ export default function AdminRoute({ children }) {
 
   if (loading) {
     return (
-      <div style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#060913",
-        color: "#94a3b8",
-        fontFamily: "'JetBrains Mono', monospace"
-      }}>
-        Authenticating admin access...
-      </div>
+      <LoadingScreen
+        title="Admin Portal"
+        subtitle="Verifying administrative credentials..."
+      />
     );
   }
 
